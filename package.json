@@ -1,0 +1,19 @@
+{
+  "name": "tdd-enterprise",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aaronbruckner/TDD-Enterprise.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aaronbruckner/TDD-Enterprise/issues"
+  },
+  "homepage": "https://github.com/aaronbruckner/TDD-Enterprise#readme"
+}
