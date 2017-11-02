@@ -19,7 +19,7 @@ A ship can be damaged. Add a function ```damageShip(damage)``` that harms the sh
 A ship object should expose a ```submodules``` property that is an object. Future submodules will be added as key entries
 to ship.submodules.
 
-#### Damage submodule
+#### Damage submodule (Implement one submodule first)
 Add function ```damageSubmodule(submodule)``` that damages provided submodule. Each submodule should have a ```status```
 property that can be ```OK```, ```DAMAGED```, or ```DESTROYED```. Damaging a submodule should degrade it's status by 
 one value (OK to DAMAGED, DAMAGED to DESTROYED). Damaging a DESTROYED module should do nothing.
@@ -84,11 +84,6 @@ their targets. When a missile reaches its target, it should invoke the ```hit```
 #### Target destroyed before missile reaches it
 When the ```target.hit``` function is invoked, it will return ```true``` if the hit destroyed the target. Any remaining
 missiles that are flying towards the target will miss and should not invoke the target.hit function.
-
-## Crew - Foundation
-
-## Crew - Pilot
-Moral
 
 ## Crew - Engineer
 
