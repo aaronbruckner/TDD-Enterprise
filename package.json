@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
@@ -15,5 +15,10 @@
   "bugs": {
     "url": "https://github.com/aaronbruckner/TDD-Enterprise/issues"
   },
-  "homepage": "https://github.com/aaronbruckner/TDD-Enterprise#readme"
+  "homepage": "https://github.com/aaronbruckner/TDD-Enterprise#readme",
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "mocha": "^4.0.1",
+    "sinon": "^4.0.2"
+  }
 }
