@@ -6,6 +6,9 @@ Plug n' play playground to experience test-driven development as a team.
 
 Run: 
 ```
+(Install node version 6 or greater if you don't already have it: https://nodejs.org/en/download/)
+(If you lack git in your commandline, download and unzip from github: https://github.com/aaronbruckner/TDD-Enterprise)
+
 git clone https://github.com/aaronbruckner/TDD-Enterprise.git
 cd TDD-Enterprise/
 npm install
