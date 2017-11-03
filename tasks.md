@@ -22,7 +22,7 @@ to ship.submodules.
 #### Damage submodule (Implement one submodule first)
 Add function ```damageSubmodule(submodule)``` that damages provided submodule. Each submodule should have a ```status```
 property that can be ```OK```, ```DAMAGED```, or ```DESTROYED```. Damaging a submodule should degrade it's status by 
-one value (OK to DAMAGED, DAMAGED to DESTROYED). Damaging a DESTROYED module should do nothing.
+one value (OK to DAMAGED, DAMAGED to DESTROYED).
 
 ## SubModules - Shield
 
@@ -42,10 +42,6 @@ returned from the function.
 #### Calculate shield percentage
 Add a ```calculateShieldPercentage(quadrant)``` function that takes a shield quadrant and returns the percentage of 
 shield remaining (0 - 100).
-
-#### Display shield status
-Add status property to shield submodule. Status should be "OK" with zero broken shield quadrants, "DAMAGED" with one broken
-quadrant, and "DESTROYED"
 
 #### Shield regeneration
 With each passing round, a single quadrant can be healed by 10 hitpoints (5 hitpoints if shield is DAMAGED). A shield 
