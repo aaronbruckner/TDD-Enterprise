@@ -55,16 +55,61 @@ describe('Ship', () => {
     });
   });
 
-  // TODO: Damage submodules
   describe('submodules', () => {
 
     it('should expose submodules property', () => {
       assert.isObject(ship.submodules, 'should expose submodules');
     });
 
+    describe('damageSubmodule', () => {
+
+      it('should expose function', () => {
+        assert.isFunction(ship.damageSubmodule, 'should expose function');
+      });
+
+      it('should damage an OK submodule to DAMAGED', function () {
+        ship.damageSubmodule('shield');
+
+        assert.equal(ship.submodules.shield.status, 'DAMAGED', 'should damage submodule');
+      });
+
+      it('should damage a DAMAGED submodule to DESTROYED', function () {
+        ship.damageSubmodule('shield');
+        ship.damageSubmodule('shield');
+
+        assert.equal(ship.submodules.shield.status, 'DESTROYED', 'should destroy submodule');
+      });
+
+      it('should have no effect on a DESTROYED submodule', function () {
+        ship.damageSubmodule('shield');
+        ship.damageSubmodule('shield');
+        ship.damageSubmodule('shield');
+
+        assert.equal(ship.submodules.shield.status, 'DESTROYED', 'should do nothing to a destroyed module');
+      });
+
+      it('should throw an exception if an unknown submodule is damaged', function () {
+        function test() {
+          ship.damageSubmodule('unknown');
+        }
+
+        assert.throws(test, 'Invalid submodule provided');
+      });
+
+    });
+
     describe('shield', () => {
+
       it('should expose shield submodule', () => {
         assert.isObject(ship.submodules.shield, 'should expose shield submodule');
+      });
+
+      it('should have a status', () => {
+        assert.isString(ship.submodules.shield.status, 'should have status');
+      });
+
+      it('should initialize to status "OK"', () => {
+        assert.equal(ship.submodules.shield.status, 'OK', 'should start as status OK');
       });
 
       it('should expose 4 shield quadrants', () => {

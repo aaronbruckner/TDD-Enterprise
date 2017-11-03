@@ -18,6 +18,7 @@ class ShipExample {
     this.hitpoints = 100;
     this.submodules = {
       shield: {
+        status: 'OK',
         front: {
           hitpoints: SHIELD_MAX.front
         },
@@ -34,6 +35,14 @@ class ShipExample {
     };
   }
 
+  calculateShieldPercentage(quadrant) {
+    if (!['front', 'back', 'left', 'right'].includes(quadrant)) {
+      throw new Error('Invalid shield quadrant provided');
+    }
+
+    return Math.round(this.submodules.shield[quadrant].hitpoints / SHIELD_MAX[quadrant] * 100);
+  }
+
   damageShip(damage) {
     this.hitpoints = Math.max(this.hitpoints - damage, 0);
   }
@@ -48,12 +57,16 @@ class ShipExample {
     return hitpoints < 0 ? Math.abs(hitpoints) : 0;
   }
 
-  calculateShieldPercentage(quadrant) {
-    if (!['front', 'back', 'left', 'right'].includes(quadrant)) {
-      throw new Error('Invalid shield quadrant provided');
+  damageSubmodule(submodule) {
+    if (!this.submodules[submodule]) {
+      throw new Error('Invalid submodule provided');
     }
 
-    return Math.round(this.submodules.shield[quadrant].hitpoints / SHIELD_MAX[quadrant] * 100);
+    this.submodules[submodule].status = this.submodules[submodule].status === 'OK' ? 'DAMAGED' : 'DESTROYED';
+  }
+
+  tick() {
+
   }
 
 }
