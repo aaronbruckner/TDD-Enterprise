@@ -83,7 +83,7 @@ describe('Ship', () => {
 
       describe('damageShield', () => {
 
-        it('should define function', function () {
+        it('should define function', () => {
           assert.isFunction(ship.damageShield, 'should define function');
         });
 
@@ -93,7 +93,7 @@ describe('Ship', () => {
           assert.equal(ship.submodules.shield.left.hitpoints, 10, 'should damage shield quadrant');
         });
 
-        it('should damage multiple shield quadrants', function () {
+        it('should damage multiple shield quadrants', () => {
           ship.damageShield('front', 1);
           ship.damageShield('back', 2);
           ship.damageShield('left', 3);
@@ -105,7 +105,7 @@ describe('Ship', () => {
           assert.equal(ship.submodules.shield.right.hitpoints, 11, 'should damage right');
         });
 
-        it('should not allow shield to drop below zero', function () {
+        it('should not allow shield to drop below zero', () => {
           ship.damageShield('front', 31);
 
           assert.equal(ship.submodules.shield.front.hitpoints, 0, 'should not drop below 0');
@@ -126,12 +126,45 @@ describe('Ship', () => {
           }
           assert.throws(test, 'Invalid shield quadrant provided');
         });
-      })
+      });
+
+      describe('calculateShieldPercentage', () => {
+
+        it('should define function', () => {
+          assert.isFunction(ship.calculateShieldPercentage, 'should define function');
+        });
+
+        it('should return shield percentage', () => {
+          assert.equal(ship.calculateShieldPercentage('front'), 100);
+        });
+
+        it('should return shield percentage for all quadrants', () => {
+          ship.damageShield('front', 15);
+          ship.damageShield('left', 15);
+          ship.damageShield('back', 5);
+
+          assert.equal(ship.calculateShieldPercentage('front'), 50, 'should return correct percentage for front');
+          assert.equal(ship.calculateShieldPercentage('back'), 50, 'should return correct percentage for back');
+          assert.equal(ship.calculateShieldPercentage('left'), 0, 'should return correct percentage for left');
+          assert.equal(ship.calculateShieldPercentage('right'), 100, 'should return correct percentage for right');
+        });
+
+        it('should round shield percentage to the nearest whole number', () => {
+          ship.damageShield('front', 1);
+          ship.damageShield('left', 1);
+
+          assert.equal(ship.calculateShieldPercentage('front'), 97, 'should round up to nearest whole number');
+          assert.equal(ship.calculateShieldPercentage('left'), 93, 'should round down to nearest whole number');
+        });
+
+        it('should throw an exception if unknown shield quadrant is passed in', () => {
+          function test() {
+            ship.calculateShieldPercentage('unknown');
+          }
+          assert.throws(test, 'Invalid shield quadrant provided');
+        });
+      });
     });
-
-  });
-
-  describe('damageShield', () => {
 
   });
 
