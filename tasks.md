@@ -1,5 +1,8 @@
 # Rules
-* You must always have a failing tests before adding a line of code.
+* You must always have a failing test before adding a line of code.
+* Write the least amount of code to make the test pass (even if it your code is not complete or functionally correct).
+* Repeat again and again until the tests have forced you to implement all the tasks including edge cases.
+* You may refactor after a passing test if needed so long as you don't change any functionality and all tests still pass.
 
 # Tasks
 The following tasks are roughly grouped by epic. Cards within each epic get progressively harder. Some of the more difficult
@@ -7,10 +10,10 @@ tasks may require other tasks to be completed first.
 
 ## Hull
 
-### Add hitpoints property to ship
+#### Add hitpoints property to ship
 A ship object should expose a ```hitpoints``` property. It should be initialized to 100.
 
-### Damage ship
+#### Damage ship
 A ship can be damaged. Add a function ```damageShip(damage)``` that harms the ship.
 
 ## SubModules - Foundation
@@ -55,7 +58,7 @@ If two or more quadrants are down, no damage can be absorbed by the shields.
 
 #### Shield destroyed! 
 If the shield submodule is damaged and its status becomes ```DESTROYED```, all shield quadrants should drop to zero and 
-become broken. Shield regeneration should be disabled until status is elevated to ```DAMAGED```
+become broken. Shield regeneration should be disabled until status is elevated to ```DAMAGED```.
 
 ## SubModules - Missile Launcher
 
