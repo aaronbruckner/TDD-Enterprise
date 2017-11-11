@@ -64,7 +64,7 @@ console.log(ship.submodules.shield.front.hitpoints); // 30
 ```
 
 #### Damage shield quadrant
-Add a ```damageShield(quadrant, damage)``` function that takes a shield quadrant and a damage amount. The function should 
+Add a ```damageShield(quadrantKey, damage)``` function that takes a shield quadrant and a damage amount. The function should 
 damage the specified shield quadrant on the ship. Note that this is not damaging the shield module itself but the shields
 it is generating. A shield quadrant's hitpoints should not drop below zero. Any unabsorbed damage should be returned 
 from the function like this:
@@ -74,7 +74,7 @@ console.log(damage); // Should be 20
 ```
 
 #### Calculate shield percentage
-Add a ```calculateShieldPercentage(quadrant)``` function that takes a shield quadrant and returns the percentage of 
+Add a ```calculateShieldPercentage(quadrantKey)``` function that takes a shield quadrant and returns the percentage of 
 shield remaining (0 - 100).
 
 Example: 

@@ -6,11 +6,19 @@
  * @author Aaron Bruckner
  */
 
-const SHIELD_MAX = {
-  front: 30,
-  back: 10,
-  left: 15,
-  right: 15
+const SHIELD_QUADRANTS = {
+  front: {
+    MAX: 30
+  },
+  back: {
+    MAX: 10
+  },
+  left: {
+    MAX: 15
+  },
+  right: {
+    MAX: 15
+  }
 };
 
 class ShipExample {
@@ -20,40 +28,46 @@ class ShipExample {
       shield: {
         status: 'OK',
         front: {
-          hitpoints: SHIELD_MAX.front
+          hitpoints: SHIELD_QUADRANTS.front.MAX
         },
         back: {
-          hitpoints: SHIELD_MAX.back
+          hitpoints: SHIELD_QUADRANTS.back.MAX
         },
         left: {
-          hitpoints: SHIELD_MAX.left
+          hitpoints: SHIELD_QUADRANTS.left.MAX
         },
         right: {
-          hitpoints: SHIELD_MAX.right
+          hitpoints: SHIELD_QUADRANTS.right.MAX
         }
       }
     };
   }
 
-  calculateShieldPercentage(quadrant) {
-    if (!['front', 'back', 'left', 'right'].includes(quadrant)) {
+  calculateShieldPercentage(quadrantKey) {
+    if (!Object.keys(SHIELD_QUADRANTS).includes(quadrantKey)) {
       throw new Error('Invalid shield quadrant provided');
     }
 
-    return Math.round(this.submodules.shield[quadrant].hitpoints / SHIELD_MAX[quadrant] * 100);
+    return Math.round(this.submodules.shield[quadrantKey].hitpoints / SHIELD_QUADRANTS[quadrantKey].MAX * 100);
   }
 
   damageShip(damage) {
     this.hitpoints = Math.max(this.hitpoints - damage, 0);
   }
 
-  damageShield(quadrant, damage) {
-    if (!['front', 'back', 'left', 'right'].includes(quadrant)) {
+  damageShield(quadrantKey, damage) {
+    if (!['front', 'back', 'left', 'right'].includes(quadrantKey)) {
       throw new Error('Invalid shield quadrant provided');
     }
 
-    let hitpoints = this.submodules.shield[quadrant].hitpoints - damage;
-    this.submodules.shield[quadrant].hitpoints = Math.max(hitpoints, 0);
+    let quadrant = this.submodules.shield[quadrantKey];
+
+    if (quadrant.broken) {
+      return damage;
+    }
+
+    let hitpoints = quadrant.hitpoints - damage;
+    quadrant.hitpoints = Math.max(hitpoints, 0);
     return hitpoints < 0 ? Math.abs(hitpoints) : 0;
   }
 
@@ -65,9 +79,50 @@ class ShipExample {
     this.submodules[submodule].status = this.submodules[submodule].status === 'OK' ? 'DAMAGED' : 'DESTROYED';
   }
 
-  tick() {
+  nextRound() {
+    let self = this;
 
+    function regenerateShield() {
+      let lowestQuadrant, lowestQuadrantKey = null;
+      let quadrantKeys = Object.keys(SHIELD_QUADRANTS);
+
+      for (let i = 0; i < quadrantKeys.length; i++) {
+        let quadrantKey = quadrantKeys[i];
+        let quadrant = self.submodules.shield[quadrantKey];
+
+        if (quadrant.broken) {
+          lowestQuadrant = quadrant;
+          lowestQuadrantKey = quadrantKey;
+          break;
+        }
+
+        if (!lowestQuadrant || (quadrant.hitpoints < lowestQuadrant.hitpoints && quadrant.hitpoints < SHIELD_QUADRANTS[quadrantKey].MAX)) {
+          lowestQuadrant = quadrant;
+          lowestQuadrantKey = quadrantKey;
+
+          if (lowestQuadrant.hitpoints === 0) {
+            // Broken shield, continue to heal until full.
+            lowestQuadrant.broken = true;
+          }
+        }
+      }
+
+      if (lowestQuadrant) {
+        let hitpointsToRegen = self.submodules.shield.status === 'OK' ? 10 : 5;
+        let quadrantMax = SHIELD_QUADRANTS[lowestQuadrantKey].MAX;
+        lowestQuadrant.hitpoints = Math.min(lowestQuadrant.hitpoints + hitpointsToRegen, quadrantMax);
+
+        if (lowestQuadrant.hitpoints === quadrantMax) {
+          // Release broken quadrant if fully healed.
+          delete lowestQuadrant.broken;
+        }
+      }
+    }
+
+    regenerateShield();
   }
+
+
 
 }
 

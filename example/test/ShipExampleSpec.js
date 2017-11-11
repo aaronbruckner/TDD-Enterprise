@@ -17,7 +17,15 @@ describe('Ship', () => {
     ship = new Ship();
   });
 
-  describe('hull', function () {
+  describe('next round', function () {
+
+    it('should be defined as a function', () => {
+      assert.isFunction(ship.nextRound, 'should define nextRound function');
+    });
+
+  });
+
+  describe('hull', () => {
 
     it('should have hitpoints', function () {
       assert.isNumber(ship.hitpoints, 'should define hitpoints on ship');
@@ -165,6 +173,26 @@ describe('Ship', () => {
           assert.equal(ship.damageShield('back', 5), 5, 'should return 5 point of unabsorbed damage');
         });
 
+        it('should return unabsorbed damage when shield is broken and being recharged', () => {
+          ship.damageShield('front', 30);
+
+          ship.nextRound();
+
+          assert.equal(ship.damageShield('front', 10), 10, 'should return all damage when targeting broken shield');
+          assert.equal(ship.submodules.shield.front.hitpoints, 10, 'should not damage a broken shield');
+        });
+
+        it('should damage a shield after it\'s fully charged', () => {
+          ship.damageShield('front', 30);
+
+          ship.nextRound();
+          ship.nextRound();
+          ship.nextRound();
+
+          assert.equal(ship.damageShield('front', 10), 0, 'should absorb all damage from recharged shield');
+          assert.equal(ship.submodules.shield.front.hitpoints, 20, 'should reduce hitpoints on shield');
+        });
+
         it('should throw an exception if unknown shield quadrant is passed in', () => {
           function test() {
             ship.damageShield('unknown', 5);
@@ -208,6 +236,96 @@ describe('Ship', () => {
           }
           assert.throws(test, 'Invalid shield quadrant provided');
         });
+      });
+
+      describe('shield regeneration', () => {
+
+        it('should regenerate the shield on passed round', () => {
+          ship.damageShield('front', 10);
+          ship.nextRound();
+
+          assert.equal(ship.submodules.shield.front.hitpoints, 30, 'should regenerate the shield');
+        });
+
+        it('should regenerate the shield over multiple rounds', () => {
+          ship.damageShield('front', 20);
+
+          ship.nextRound();
+          assert.equal(ship.submodules.shield.front.hitpoints, 20, 'should regenerate 10 hitpoints');
+          ship.nextRound();
+          assert.equal(ship.submodules.shield.front.hitpoints, 30, 'should regenerate another 10 hitpoints');
+        });
+
+        it('should not regenerate shield past max hitpoints', () => {
+          ship.damageShield('front', 5);
+          ship.nextRound();
+
+          assert.equal(ship.submodules.shield.front.hitpoints, 30, 'should not surpass max');
+        });
+
+        it('should pick the lowest quadrant to heal', () => {
+          ship.damageShield('front', 5);
+          ship.damageShield('back', 1);
+
+          ship.nextRound();
+
+          assert.equal(ship.submodules.shield.front.hitpoints, 25, 'should not pick shield with more hitpoints');
+          assert.equal(ship.submodules.shield.back.hitpoints, 10, 'should regenerate lowest hitpoint quadrant');
+        });
+
+        it('should do nothing if all shields are full', function () {
+          ship.nextRound();
+
+          assert.equal(ship.submodules.shield.front.hitpoints, 30, 'should not heal front');
+          assert.equal(ship.submodules.shield.back.hitpoints, 10, 'should not heal back');
+          assert.equal(ship.submodules.shield.left.hitpoints, 15, 'should not heal left');
+          assert.equal(ship.submodules.shield.right.hitpoints, 15, 'should not heal right');
+        });
+
+        it('should continue to heal a broken shield once started event if other quadrants are lower', () => {
+          ship.damageShield('front', 30);
+          ship.damageShield('back', 9);
+          ship.damageShield('left', 13);
+          ship.damageShield('right', 13);
+
+          ship.nextRound();
+
+          assert.equal(ship.submodules.shield.front.hitpoints, 10, 'should heal front');
+          assert.equal(ship.submodules.shield.back.hitpoints, 1, 'should not heal back');
+          assert.equal(ship.submodules.shield.left.hitpoints, 2, 'should not heal left');
+          assert.equal(ship.submodules.shield.right.hitpoints, 2, 'should not heal right');
+
+          ship.nextRound();
+
+          assert.equal(ship.submodules.shield.front.hitpoints, 20, 'should continue to heal front');
+          assert.equal(ship.submodules.shield.back.hitpoints, 1, 'should not heal back');
+          assert.equal(ship.submodules.shield.left.hitpoints, 2, 'should not heal left');
+          assert.equal(ship.submodules.shield.right.hitpoints, 2, 'should not heal right');
+
+          ship.nextRound();
+
+          assert.equal(ship.submodules.shield.front.hitpoints, 30, 'should continue to heal front');
+          assert.equal(ship.submodules.shield.back.hitpoints, 1, 'should not heal back');
+          assert.equal(ship.submodules.shield.left.hitpoints, 2, 'should not heal left');
+          assert.equal(ship.submodules.shield.right.hitpoints, 2, 'should not heal right');
+
+          ship.nextRound();
+
+          assert.equal(ship.submodules.shield.front.hitpoints, 30, 'should no longer heal front');
+          assert.equal(ship.submodules.shield.back.hitpoints, 10, 'should switch to healing back');
+          assert.equal(ship.submodules.shield.left.hitpoints, 2, 'should not heal left');
+          assert.equal(ship.submodules.shield.right.hitpoints, 2, 'should not heal right');
+        });
+
+        it('should only regenerate 5 points if shield submodule is damaged', () => {
+          ship.damageSubmodule('shield');
+          ship.damageShield('front', 10);
+
+          ship.nextRound();
+
+          assert.equal(ship.submodules.shield.front.hitpoints, 25, 'should heal only 5 hitpoints if submodule is damaged');
+        });
+
       });
     });
 
