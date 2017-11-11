@@ -90,8 +90,9 @@ pick the quadrant with the lowest hitpoints to regenerate each round. If a broke
 for every round thereafter until brought to 100%.
 
 #### Shield collapsed! 
-The shield can only take so much abuse. Once two quadrants collapse, the remaining shield quadrants are no longer effective.
-If two or more quadrants are down, no damage can be absorbed by the shields.
+The shield can only take so much abuse. Once two quadrants break, the remaining shield quadrants are no longer effective.
+If two or more quadrants are broken (zero hitpoints or reached zero hitpoints and is being recharged) no damage can be 
+absorbed by the remaining quadrants.
 
 #### Shield destroyed! 
 If the shield submodule is damaged and its status becomes ```DESTROYED```, all shield quadrants should drop to zero and 
