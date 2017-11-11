@@ -8,13 +8,26 @@
 The following tasks are roughly grouped by epic. Cards within each epic get progressively harder. Some of the more difficult
 tasks may require other tasks to be completed first.
 
+## Time
+
+#### Add ability to process a round
+There's a lot going on in a ship and it can't all happen at once. Some functionality requires time to pass before it can
+be completed. Add a function ```nextRound()``` that will process a round. This will allow future modules to regenerate
+shields, heal hitpoints, and move crew members. While it currently won't do anything, later tasks will require passage 
+of time for their functionality.
+
 ## Hull
 
 #### Add hitpoints property to ship
 A ship object should expose a ```hitpoints``` property. It should be initialized to 100.
 
 #### Damage ship
-A ship can be damaged. Add a function ```damageShip(damage)``` that harms the ship.
+A ship can be damaged. Add a function ```damageShip(damage)``` that harms the ship. This should reduce the ship hitpoints
+property by the given "damage" amount. Example:
+```
+ship.damageShip(25);
+console.log(ship.hitpoints); // 75 hitpoints remaining
+```
 
 ## SubModules - Foundation
 
@@ -22,10 +35,18 @@ A ship can be damaged. Add a function ```damageShip(damage)``` that harms the sh
 A ship object should expose a ```submodules``` property that is an object. Future submodules will be added as key entries
 to ship.submodules.
 
-#### Damage submodule (Implement one submodule first)
-Add function ```damageSubmodule(submodule)``` that damages provided submodule. Each submodule should have a ```status```
-property that can be ```OK```, ```DAMAGED```, or ```DESTROYED```. Damaging a submodule should degrade it's status by 
-one value (OK to DAMAGED, DAMAGED to DESTROYED).
+#### Damage submodule
+**Start a submodule implementation before attempting this (shield or missile launcher).** Add function 
+```damageSubmodule(submodule)``` that damages the provided submodule. A submodule may fire a missile or block damage via a 
+shielding effect, but the module itself can be damaged under certain circumstances. A damaged submodule will be less
+effective. Each submodule should have a ```status``` property that can be ```OK```, ```DAMAGED```, or ```DESTROYED```.
+Damaging a submodule should degrade it's status by one value (```OK``` to ```DAMAGED```, ```DAMAGED``` to ```DESTROYED```).
+
+Example:
+```
+ship.damageSubmodule('shield');
+console.log(ship.submodules.shield.status); // DAMAGED
+```
 
 ## SubModules - Shield
 
@@ -37,14 +58,30 @@ Front should start with 30 hitpoints.
 Left and right should start with 15 hitpoints.
 Back should start with 10 hitpoints.
 
+Example:
+```
+console.log(ship.submodules.shield.front.hitpoints); // 30
+```
+
 #### Damage shield quadrant
-Add a ```damageShield(quadrant, damage)``` function that takes a shield quadrant and a damage amount. The function should damage the specified
-shield quadrant on the ship. A shield quadrant's hitpoints should not drop below zero. Any unabsorbed damage should be
-returned from the function.
+Add a ```damageShield(quadrant, damage)``` function that takes a shield quadrant and a damage amount. The function should 
+damage the specified shield quadrant on the ship. Note that this is not damaging the shield module itself but the shields
+it is generating. A shield quadrant's hitpoints should not drop below zero. Any unabsorbed damage should be returned 
+from the function like this:
+```
+var damage = ship.damageShield('front', 50);
+console.log(damage); // Should be 20
+```
 
 #### Calculate shield percentage
 Add a ```calculateShieldPercentage(quadrant)``` function that takes a shield quadrant and returns the percentage of 
 shield remaining (0 - 100).
+
+Example: 
+```
+ship.damageShield('front', 15);
+console.log(ship.calculateShieldPercentage('front')); // 50
+```
 
 #### Shield regeneration
 With each passing round, a single quadrant can be healed by 10 hitpoints (5 hitpoints if shield is DAMAGED). A shield 
@@ -69,16 +106,16 @@ A ship cant fire missiles without a missile launcher. Add the ```missileLauncher
 Add function ```fireMissile(target)``` to launch a missile at the target. The target has a distance, and id that identifies,
 it, and a function called ```hit```. 
 
+#### Missile moves towards target and damages it
+Missiles take time to reach their target. With each passing round, all missiles in flight move 1 distance unit towards 
+their targets. When a missile reaches its target, it should invoke the ```hit``` function on the target.
+
 #### Damaged missiles launchers are dangerous
 Sometimes you just can't wait to do the right thing in a space battle. If the ```missileLauncher``` submodule is 
 ```DAMAGED```, firing it deals 1 point of damage to the ship.
 
 #### Destroyed missile launchers are useless
 Even in dire straights, destroyed is destroyed. The ```missileLauncher``` cannot be fired when ```DESTROYED```.
-
-#### Missile moves towards target and damages it
-Missiles take time to reach their target. With each passing round, all missiles in flight move 1 distance unit towards 
-their targets. When a missile reaches its target, it should invoke the ```hit``` function on the target.
 
 #### Target destroyed before missile reaches it
 When the ```target.hit``` function is invoked, it will return ```true``` if the hit destroyed the target. Any remaining
