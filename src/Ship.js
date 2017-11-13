@@ -6,8 +6,14 @@
 class Ship {
 
   constructor() {
-
+    this.exampleProperty = 'exampleProperty';
   }
+
+  exampleFunction(exampleParameter) {
+    console.log('This is a function');
+  }
+
+
 
 }
 

@@ -17,8 +17,12 @@ describe('Ship', () => {
 
   describe('Some ship feature', () => {
 
-    it('should do something', () => {
-      // What should it do?
+    it('should define a property', () => {
+      assert.equal(ship.exampleProperty, 'exampleProperty', 'should define a property');
+    });
+
+    it('should have a function', () => {
+      assert.isFunction(ship.exampleFunction, 'should define a function');
     });
 
   });
