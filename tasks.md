@@ -104,8 +104,9 @@ become broken. Shield regeneration should be disabled until status is elevated t
 A ship cant fire missiles without a missile launcher. Add the ```missileLauncher``` submodule.
 
 #### Launch missile at target
-Add function ```fireMissile(target)``` to launch a missile at the target. The target has a distance, and id that identifies,
-it, and a function called ```hit```. 
+Add function ```fireMissile(target)```. When called, the ship fires a missile at the target (which was passed in as a 
+parameter). The target parameter is an object that has a distance, an id that uniquely identifies it, and a function 
+called ```hit```. There can be multiple missiles in-flight.
 
 #### Missile moves towards target and damages it
 Missiles take time to reach their target. With each passing round, all missiles in flight move 1 distance unit towards 
