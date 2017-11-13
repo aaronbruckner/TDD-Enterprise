@@ -95,8 +95,9 @@ If two or more quadrants are broken (zero hitpoints or reached zero hitpoints an
 absorbed by the remaining quadrants.
 
 #### Shield destroyed! 
-If the shield submodule is damaged and its status becomes ```DESTROYED```, all shield quadrants should drop to zero and 
-become broken. Shield regeneration should be disabled until status is elevated to ```DAMAGED```.
+**Implement the Engineer before completing this.** If the shield submodule is damaged and its status becomes ```DESTROYED```,
+all shield quadrants should drop to zero and become broken. Shield regeneration should be disabled until status is 
+elevated to ```DAMAGED```.
 
 ## SubModules - Missile Launcher
 
