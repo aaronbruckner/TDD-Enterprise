@@ -327,6 +327,32 @@ describe('Ship', () => {
         });
 
       });
+
+      describe('shield collapse', () => {
+
+        it('should not absorb damage if two shields are broken', () => {
+          ship.damageShield('front', 30);
+          ship.damageShield('left', 15);
+
+          let unabsorbedDamage = ship.damageShield('right', 15);
+
+          assert.equal(unabsorbedDamage, 15, 'should return all damage when two other shield are broken');
+          assert.equal(ship.submodules.shield.right.hitpoints, 15, 'should not do any damage when two other shields are broken');
+        });
+
+        it('should not absorb damage if one shields is broken and another is regenerating from a broken state', () => {
+          ship.damageShield('front', 30);
+          ship.damageShield('left', 15);
+          ship.nextRound();
+
+          let unabsorbedDamage = ship.damageShield('right', 15);
+
+          assert.equal(unabsorbedDamage, 15, 'should return all damage when two other shield are broken');
+          assert.equal(ship.submodules.shield.right.hitpoints, 15, 'should not do any damage when two other shields are broken');
+        });
+
+      });
+
     });
 
   });

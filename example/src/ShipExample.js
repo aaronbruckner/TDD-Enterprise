@@ -60,6 +60,19 @@ class ShipExample {
       throw new Error('Invalid shield quadrant provided');
     }
 
+    let totalBrokenQuadrants = 0;
+    Object.keys(SHIELD_QUADRANTS).forEach((quadrantKey) => {
+      let quadrant = this.submodules.shield[quadrantKey];
+      if (quadrant.hitpoints === 0 || quadrant.broken) {
+        totalBrokenQuadrants++;
+      }
+    });
+
+    if (totalBrokenQuadrants === 2) {
+      return damage;
+    }
+
+
     let quadrant = this.submodules.shield[quadrantKey];
 
     if (quadrant.broken) {
