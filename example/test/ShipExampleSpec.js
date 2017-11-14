@@ -355,6 +355,81 @@ describe('Ship', () => {
 
     });
 
+    describe('missileLauncher', () => {
+
+      it('should exist', () => {
+        assert.isObject(ship.submodules.missileLauncher, 'should have missileLauncher submodule');
+      });
+
+    });
+
+  });
+
+  describe('crew', () => {
+
+    it('should have a crew property', () => {
+      assert.isObject(ship.crew, 'should have a crew property');
+    });
+
+    describe('engineer', () => {
+
+      it('should have an engineer', () => {
+        assert.isObject(ship.crew.engineer, 'should have an engineer');
+      });
+
+      describe('assignEngineer', () => {
+
+        it('should be defined', () => {
+          assert.isFunction(ship.assignEngineer, 'should define function');
+        });
+
+        it('should default engineer to no assigned submodule', () => {
+          assert.isNull(ship.crew.engineer.assignedSubmodule, 'should default engineer to no submodule');
+        });
+
+        ['shield', 'missileLauncher'].forEach((submodule) => {
+          it('should assign engineer to submodule: ' + submodule, () => {
+            ship.assignEngineer(submodule);
+
+            assert.equal(ship.crew.engineer.assignedSubmodule, submodule, 'should move engineer to assigned submodule');
+          });
+        });
+
+        it('should only allow the engineer to be assigned once per round', () => {
+          ship.assignEngineer('shield');
+          ship.assignEngineer('missileLauncher');
+
+          assert.equal(ship.crew.engineer.assignedSubmodule, 'shield', 'should wait until next round to allow second assingment');
+        });
+
+        it('should allow the engineer to be assigned after a round has passed', () => {
+          ship.assignEngineer('shield');
+          ship.nextRound();
+          ship.assignEngineer('missileLauncher');
+
+          assert.equal(ship.crew.engineer.assignedSubmodule, 'missileLauncher', 'should allow second assignment after round');
+        });
+
+        it('should unassign the engineer if null is passed', () => {
+          ship.assignEngineer('shield');
+          ship.nextRound();
+          ship.assignEngineer(null);
+
+          assert.isNull(ship.crew.engineer.assignedSubmodule, 'should unassign the engineer');
+        });
+
+        it('should throw an exception if an unknown submodule is passed in', () => {
+          let test = () => {
+            ship.assignEngineer('unknown');
+          };
+
+          assert.throws(test, 'Invalid submodule provided');
+        });
+
+      });
+
+    });
+
   });
 
 });

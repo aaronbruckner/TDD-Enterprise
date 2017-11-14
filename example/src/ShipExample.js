@@ -39,6 +39,15 @@ class ShipExample {
         right: {
           hitpoints: SHIELD_QUADRANTS.right.MAX
         }
+      },
+      missileLauncher: {
+
+      }
+    };
+    this.crew = {
+      engineer: {
+        assignedSubmodule: null,
+        assignedThisRound: false
       }
     };
   }
@@ -56,7 +65,7 @@ class ShipExample {
   }
 
   damageShield(quadrantKey, damage) {
-    if (!['front', 'back', 'left', 'right'].includes(quadrantKey)) {
+    if (!Object.keys(SHIELD_QUADRANTS).includes(quadrantKey)) {
       throw new Error('Invalid shield quadrant provided');
     }
 
@@ -90,6 +99,19 @@ class ShipExample {
     }
 
     this.submodules[submodule].status = this.submodules[submodule].status === 'OK' ? 'DAMAGED' : 'DESTROYED';
+  }
+
+  assignEngineer(submodule) {
+    if (submodule !== null && !this.submodules[submodule]) {
+      throw new Error('Invalid submodule provided');
+    }
+
+    if (this.crew.engineer.assignedThisRound) {
+      return;
+    }
+    
+    this.crew.engineer.assignedThisRound = true;
+    this.crew.engineer.assignedSubmodule = submodule;
   }
 
   nextRound() {
@@ -133,6 +155,7 @@ class ShipExample {
     }
 
     regenerateShield();
+    this.crew.engineer.assignedThisRound = false;
   }
 
 
