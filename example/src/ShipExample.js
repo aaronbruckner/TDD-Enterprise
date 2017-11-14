@@ -41,7 +41,7 @@ class ShipExample {
         }
       },
       missileLauncher: {
-
+        status: 'OK'
       }
     };
     this.crew = {
@@ -109,7 +109,7 @@ class ShipExample {
     if (this.crew.engineer.assignedThisRound) {
       return;
     }
-    
+
     this.crew.engineer.assignedThisRound = true;
     this.crew.engineer.assignedSubmodule = submodule;
   }

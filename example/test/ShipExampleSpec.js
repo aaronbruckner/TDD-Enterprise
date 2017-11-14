@@ -75,25 +75,29 @@ describe('Ship', () => {
         assert.isFunction(ship.damageSubmodule, 'should expose function');
       });
 
-      it('should damage an OK submodule to DAMAGED', function () {
-        ship.damageSubmodule('shield');
+      ['shield', 'missileLauncher'].forEach((submodule) => {
+        describe('submodule ' + submodule, () => {
+          it('should damage an OK submodule to DAMAGED', function () {
+            ship.damageSubmodule(submodule);
 
-        assert.equal(ship.submodules.shield.status, 'DAMAGED', 'should damage submodule');
-      });
+            assert.equal(ship.submodules[submodule].status, 'DAMAGED', 'should damage submodule');
+          });
 
-      it('should damage a DAMAGED submodule to DESTROYED', function () {
-        ship.damageSubmodule('shield');
-        ship.damageSubmodule('shield');
+          it('should damage a DAMAGED submodule to DESTROYED', function () {
+            ship.damageSubmodule(submodule);
+            ship.damageSubmodule(submodule);
 
-        assert.equal(ship.submodules.shield.status, 'DESTROYED', 'should destroy submodule');
-      });
+            assert.equal(ship.submodules[submodule].status, 'DESTROYED', 'should destroy submodule');
+          });
 
-      it('should have no effect on a DESTROYED submodule', function () {
-        ship.damageSubmodule('shield');
-        ship.damageSubmodule('shield');
-        ship.damageSubmodule('shield');
+          it('should have no effect on a DESTROYED submodule', function () {
+            ship.damageSubmodule(submodule);
+            ship.damageSubmodule(submodule);
+            ship.damageSubmodule(submodule);
 
-        assert.equal(ship.submodules.shield.status, 'DESTROYED', 'should do nothing to a destroyed module');
+            assert.equal(ship.submodules[submodule].status, 'DESTROYED', 'should do nothing to a destroyed module');
+          });
+        });
       });
 
       it('should throw an exception if an unknown submodule is damaged', function () {
@@ -361,6 +365,13 @@ describe('Ship', () => {
         assert.isObject(ship.submodules.missileLauncher, 'should have missileLauncher submodule');
       });
 
+      it('should have a status', () => {
+        assert.isString(ship.submodules.missileLauncher.status, 'should have status');
+      });
+
+      it('should initialize to status "OK"', () => {
+        assert.equal(ship.submodules.missileLauncher.status, 'OK', 'should start as status OK');
+      });
     });
 
   });
@@ -425,6 +436,12 @@ describe('Ship', () => {
 
           assert.throws(test, 'Invalid submodule provided');
         });
+
+      });
+
+      describe('submodule repair', () => {
+
+
 
       });
 
