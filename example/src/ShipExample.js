@@ -100,7 +100,7 @@ class ShipExample {
       }
     });
 
-    if (totalBrokenQuadrants === 2) {
+    if (totalBrokenQuadrants >= 2) {
       return damage;
     }
 
@@ -129,6 +129,12 @@ class ShipExample {
     }
 
     this.submodules[submodule].status = this.submodules[submodule].status === 'OK' ? 'DAMAGED' : 'DESTROYED';
+
+    if (this.submodules.shield.status === 'DESTROYED') {
+      Object.keys(SHIELD_QUADRANTS).forEach((quadrantKey) => {
+        this.submodules.shield[quadrantKey].hitpoints = 0;
+      });
+    }
   }
 
   /**
@@ -157,7 +163,18 @@ class ShipExample {
   nextRound() {
     let self = this;
 
+    function repairSubmodule() {
+      let assignedSubmodule = self.crew.engineer.assignedSubmodule;
+      if (assignedSubmodule) {
+          self.submodules[assignedSubmodule].status = self.submodules[assignedSubmodule].status === 'DESTROYED' ? 'DAMAGED' : 'OK';
+      }
+    }
+
     function regenerateShield() {
+      if (self.submodules.shield.status === 'DESTROYED') {
+        return;
+      }
+
       let lowestQuadrant, lowestQuadrantKey = null;
       let quadrantKeys = Object.keys(SHIELD_QUADRANTS);
 
@@ -194,15 +211,9 @@ class ShipExample {
       }
     }
 
-    function repairSubmodule() {
-      let assignedSubmodule = self.crew.engineer.assignedSubmodule;
-      if (assignedSubmodule) {
-          self.submodules[assignedSubmodule].status = self.submodules[assignedSubmodule].status === 'DESTROYED' ? 'DAMAGED' : 'OK';
-      }
-    }
-
-    regenerateShield();
     repairSubmodule();
+    regenerateShield();
+
     this.crew.engineer.assignedThisRound = false;
   }
 

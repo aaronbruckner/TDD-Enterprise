@@ -357,6 +357,61 @@ describe('Ship', () => {
 
       });
 
+      describe('shield destroyed', () => {
+
+        it('should drop all shield quadrants to zero hitpoints', () => {
+          ship.damageSubmodule('shield');
+          ship.damageSubmodule('shield');
+
+          assert.equal(ship.submodules.shield.front.hitpoints, 0, 'should drop front to zero hitpoints');
+          assert.equal(ship.submodules.shield.back.hitpoints, 0, 'should drop back to zero hitpoints');
+          assert.equal(ship.submodules.shield.left.hitpoints, 0, 'should drop left to zero hitpoints');
+          assert.equal(ship.submodules.shield.right.hitpoints, 0, 'should drop right to zero hitpoints');
+        });
+
+        it('should disable shield regeneration', () => {
+          ship.damageSubmodule('shield');
+          ship.damageSubmodule('shield');
+
+          ship.nextRound();
+
+          assert.equal(ship.submodules.shield.front.hitpoints, 0, 'should not heal front');
+          assert.equal(ship.submodules.shield.back.hitpoints, 0, 'should not heal back');
+          assert.equal(ship.submodules.shield.left.hitpoints, 0, 'should not heal left to');
+          assert.equal(ship.submodules.shield.right.hitpoints, 0, 'should not heal right to');
+        });
+
+        it('should restore shield regeneration after submodule is repaired', () => {
+          ship.damageSubmodule('shield');
+          ship.damageSubmodule('shield');
+          ship.assignEngineer('shield')
+
+          ship.nextRound();
+
+          assert.equal(ship.submodules.shield.front.hitpoints, 5, 'should heal front after shield module repaired');
+        });
+
+        it('should not allow any damage to shield to be absorbed', () => {
+          ship.damageSubmodule('shield');
+          ship.damageSubmodule('shield');
+
+          assert.equal(ship.damageShield('front', 10), 10, 'should return all damage as unabsorbed');
+        });
+
+        it('should not allow a single fully charged shield to absorb damage while the other quadrants are still broken', () => {
+          ship.damageSubmodule('shield');
+          ship.damageSubmodule('shield');
+          ship.assignEngineer('shield');
+
+          ship.nextRound();
+          ship.nextRound();
+          ship.nextRound();
+          ship.nextRound();
+
+          assert.equal(ship.damageShield('front', 10), 10, 'should retun all damage as unabsorbed if only one quadrant has been restored');
+        });
+
+      });
     });
 
     describe('missileLauncher', () => {
@@ -486,6 +541,16 @@ describe('Ship', () => {
           ship.nextRound();
 
           assert.equal(ship.submodules.shield.status, 'OK', 'should do nothing to shield status');
+        });
+
+        it('should repair a module before any other actions occur in a ship', () => {
+          ship.damageShield('front', 10);
+          ship.damageSubmodule('shield');
+          ship.assignEngineer('shield');
+
+          ship.nextRound();
+
+          assert.equal(ship.submodules.shield.front.hitpoints, 30, 'should repair module before regeneration occurs');
         });
 
       });
