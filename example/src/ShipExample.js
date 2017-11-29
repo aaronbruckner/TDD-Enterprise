@@ -21,6 +21,9 @@ const SHIELD_QUADRANTS = {
   }
 };
 
+/**
+* Constructs a ship. Ships have weapons, crew, and shields.
+*/
 class ShipExample {
   constructor() {
     this.hitpoints = 100;
@@ -154,7 +157,15 @@ class ShipExample {
       }
     }
 
+    function repairSubmodule() {
+      let assignedSubmodule = self.crew.engineer.assignedSubmodule;
+      if (assignedSubmodule) {
+          self.submodules[assignedSubmodule].status = self.submodules[assignedSubmodule].status === 'DESTROYED' ? 'DAMAGED' : 'OK';
+      }
+    }
+
     regenerateShield();
+    repairSubmodule();
     this.crew.engineer.assignedThisRound = false;
   }
 

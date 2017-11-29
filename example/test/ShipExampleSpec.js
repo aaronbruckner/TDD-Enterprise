@@ -441,7 +441,52 @@ describe('Ship', () => {
 
       describe('submodule repair', () => {
 
+        it('should do nothing if engineer is not assigned', () => {
+          ship.damageSubmodule('shield');
+          ship.damageSubmodule('missileLauncher');
 
+          ship.nextRound();
+
+          assert.equal(ship.submodules.shield.status, 'DAMAGED', 'should do nothing to submodule status');
+          assert.equal(ship.submodules.missileLauncher.status, 'DAMAGED', 'should do nothing to submodule status');
+        });
+
+        it('should wait until the next round to repair the submodule', () => {
+          ship.damageSubmodule('shield');
+
+          ship.assignEngineer('shield');
+
+          assert.equal(ship.submodules.shield.status, 'DAMAGED', 'should not improve shield status until next round');
+        });
+
+        it('should improve a DAMAGED submodule', () => {
+          ship.damageSubmodule('missileLauncher');
+          ship.damageSubmodule('shield');
+          ship.assignEngineer('shield');
+
+          ship.nextRound();
+
+          assert.equal(ship.submodules.shield.status, 'OK', 'should improve shield status');
+          assert.equal(ship.submodules.missileLauncher.status, 'DAMAGED', 'should do nothing to missileLauncher status');
+        });
+
+        it('should improve a DESTROYED submodule', () => {
+          ship.damageSubmodule('shield');
+          ship.damageSubmodule('shield');
+          ship.assignEngineer('shield');
+
+          ship.nextRound();
+
+          assert.equal(ship.submodules.shield.status, 'DAMAGED', 'should do nothing to submodule status');
+        });
+
+        it('should do nothing to an OK submodule', () => {
+          ship.assignEngineer('shield');
+
+          ship.nextRound();
+
+          assert.equal(ship.submodules.shield.status, 'OK', 'should do nothing to shield status');
+        });
 
       });
 
