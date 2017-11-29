@@ -23,6 +23,7 @@ const SHIELD_QUADRANTS = {
 
 /**
 * Constructs a ship. Ships have weapons, crew, and shields.
+* @constructor
 */
 class ShipExample {
   constructor() {
@@ -55,6 +56,12 @@ class ShipExample {
     };
   }
 
+  /**
+  * Checks a shield quadrant's remaining shield percentage.
+  *
+  * @param {string} quadrantKey - the shield quadrant to calculate percentage for.
+  * @returns a whole number (0-100) representing the percentage of remaining shield for the given quadrantKey
+  */
   calculateShieldPercentage(quadrantKey) {
     if (!Object.keys(SHIELD_QUADRANTS).includes(quadrantKey)) {
       throw new Error('Invalid shield quadrant provided');
@@ -63,10 +70,23 @@ class ShipExample {
     return Math.round(this.submodules.shield[quadrantKey].hitpoints / SHIELD_QUADRANTS[quadrantKey].MAX * 100);
   }
 
+  /**
+  * If the ship is under fire, its hull can be damaged. Removes hitpoints from the ship.
+  * A ship's hitpoints cannot drop below zero.
+  *
+  * @param {number} damage - the total damage to deal to the ship.
+  */
   damageShip(damage) {
     this.hitpoints = Math.max(this.hitpoints - damage, 0);
   }
 
+  /**
+  * Damages a specific shield quadrant (front, back, left, right) by the provided damage.
+  *
+  * @param {string} quadrantKey - the shield quadrant to apply the damage to.
+  * @param {number} damage - the total damage to deal to the ship.
+  * @returns {number} - any damage that is not absorbed by the shield is returned. If all damage is absorbed, 0 is returned.
+  */
   damageShield(quadrantKey, damage) {
     if (!Object.keys(SHIELD_QUADRANTS).includes(quadrantKey)) {
       throw new Error('Invalid shield quadrant provided');
@@ -96,6 +116,13 @@ class ShipExample {
     return hitpoints < 0 ? Math.abs(hitpoints) : 0;
   }
 
+  /**
+  * Submodules can be damaged or destroyed in combat. Damaged submodules are less effective.
+  * This degrades the submodule by one status (OK -> DAMAGED, DAMAGED -> DESTROYED). This has no
+  * effect on destroyed submodules.
+  *
+  * @param {string} submodule - the name of the submodule to damage.
+  */
   damageSubmodule(submodule) {
     if (!this.submodules[submodule]) {
       throw new Error('Invalid submodule provided');
@@ -104,6 +131,13 @@ class ShipExample {
     this.submodules[submodule].status = this.submodules[submodule].status === 'OK' ? 'DAMAGED' : 'DESTROYED';
   }
 
+  /**
+  * The engineer can repair damaged or destroyed submodules. To do so he first must
+  * be assigned to a submodule. Repairs occur every round. An engineer can only be
+  * moved once per round. Any additional assignemts before the round passes will be ignored.
+  *
+  * @param {string} submodule - the name of the submodule to move the engineer to.
+  */
   assignEngineer(submodule) {
     if (submodule !== null && !this.submodules[submodule]) {
       throw new Error('Invalid submodule provided');
@@ -117,6 +151,9 @@ class ShipExample {
     this.crew.engineer.assignedSubmodule = submodule;
   }
 
+  /**
+  * Time must pass for certian actions to occur. They are all processed here.
+  */
   nextRound() {
     let self = this;
 
