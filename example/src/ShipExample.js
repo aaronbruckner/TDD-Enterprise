@@ -45,7 +45,8 @@ class ShipExample {
         }
       },
       missileLauncher: {
-        status: 'OK'
+        status: 'OK',
+        targets: []
       }
     };
     this.crew = {
@@ -158,6 +159,18 @@ class ShipExample {
   }
 
   /**
+  * Launches a missle at the target.
+  * @param {object} target - the target to launch a missle at.
+  * @param {string} target.id - the unique identifier for the target. Multiple targets with the same id are targetting the
+  *                             same physical enemy.
+  * @param {number} target.distance - indicates how far away the missile is from the target.
+  * @param {function} target.hit - function to invoke once the missile reaches its target.
+  */
+  fireMissile(target) {
+    this.submodules.missileLauncher.targets.push(target);
+  }
+
+  /**
   * Time must pass for certian actions to occur. They are all processed here.
   */
   nextRound() {
@@ -216,9 +229,6 @@ class ShipExample {
 
     this.crew.engineer.assignedThisRound = false;
   }
-
-
-
 }
 
 module.exports = ShipExample;

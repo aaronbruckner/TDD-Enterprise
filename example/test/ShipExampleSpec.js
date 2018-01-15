@@ -427,6 +427,33 @@ describe('Ship', () => {
       it('should initialize to status "OK"', () => {
         assert.equal(ship.submodules.missileLauncher.status, 'OK', 'should start as status OK');
       });
+
+      describe('fireMissile', () => {
+
+        it('should start with zero targets', () => {
+          assert.isArray(ship.submodules.missileLauncher.targets, 'should track targets in an array');
+          assert.equal(ship.submodules.missileLauncher.targets.length, 0, 'should start with 0 targets');
+        });
+
+        it('should be defined', () => {
+          assert.isFunction(ship.fireMissile, 'should define function');
+        });
+
+        it('should add new target to list of tracked targets', () => {
+          let target = {
+            id: 'enemyShip1',
+            distance: 5,
+            hit: () => {}
+          };
+
+          ship.fireMissile(target);
+
+          assert.equal(ship.submodules.missileLauncher.targets.length, 1, 'should be 1 target');
+          assert.equal(ship.submodules.missileLauncher.targets[0], target, 'should add provided target to targets');
+        });
+
+      });
+
     });
 
   });
