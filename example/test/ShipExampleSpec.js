@@ -535,6 +535,63 @@ describe('Ship', () => {
 
       });
 
+      describe('status', () => {
+
+        describe('DAMAGED', () => {
+
+          it('should damage the hull by 1 hitpoint"', () => {
+            ship.damageSubmodule('missileLauncher');
+
+            let target = {
+              id: 'enemyShip1',
+              distance: 5,
+              hit: () => {}
+            };
+            ship.fireMissile(target);
+
+            assert.equal(ship.hitpoints, 99, 'should hurt ship for 1 hitpoint');
+          });
+
+          it('should not drop hull below zero hitpoints"', () => {
+            ship.damageSubmodule('missileLauncher');
+            ship.damageShip(100);
+
+            let target = {
+              id: 'enemyShip1',
+              distance: 5,
+              hit: () => {}
+            };
+            ship.fireMissile(target);
+
+            assert.equal(ship.hitpoints, 0, 'should not drop ship below 0 hitpoints');
+          });
+
+          it('should not fire a missile if the hull has 0 hitpoints', () => {
+            ship.damageSubmodule('missileLauncher');
+            ship.damageShip(100);
+
+            let target = {
+              id: 'enemyShip1',
+              distance: 5,
+              hit: () => {}
+            };
+            ship.fireMissile(target);
+
+            assert.equal(ship.submodules.missileLauncher.targets.length, 0, 'should not launch missile if ship has 0 hitpoints');
+          });
+
+        });
+
+        describe('DESTROYED', () => {
+
+          it('should not fire missle', () => {
+
+          });
+
+        });
+
+      });
+
     });
 
   });

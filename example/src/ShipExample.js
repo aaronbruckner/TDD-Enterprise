@@ -167,7 +167,12 @@ class ShipExample {
   * @param {function} target.hit - function to invoke once the missile reaches its target.
   */
   fireMissile(target) {
-    this.submodules.missileLauncher.targets.push(target);
+    if (this.submodules.missileLauncher.status === 'DAMAGED') {
+      this.damageShip(1);
+    }
+    if (this.hitpoints > 0) {
+      this.submodules.missileLauncher.targets.push(target);  
+    }
   }
 
   /**
