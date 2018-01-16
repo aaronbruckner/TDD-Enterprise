@@ -584,8 +584,18 @@ describe('Ship', () => {
 
         describe('DESTROYED', () => {
 
-          it('should not fire missle', () => {
+          it('should not fire a missile', () => {
+            ship.damageSubmodule('missileLauncher');
+            ship.damageSubmodule('missileLauncher');
 
+            let target = {
+              id: 'enemyShip1',
+              distance: 5,
+              hit: () => {}
+            };
+            ship.fireMissile(target);
+
+            assert.equal(ship.submodules.missileLauncher.targets.length, 0, 'should not launch missile if submodule is destroyed');
           });
 
         });

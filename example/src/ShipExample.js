@@ -170,8 +170,8 @@ class ShipExample {
     if (this.submodules.missileLauncher.status === 'DAMAGED') {
       this.damageShip(1);
     }
-    if (this.hitpoints > 0) {
-      this.submodules.missileLauncher.targets.push(target);  
+    if (this.hitpoints > 0 && this.submodules.missileLauncher.status !== 'DESTROYED') {
+      this.submodules.missileLauncher.targets.push(target);
     }
   }
 
