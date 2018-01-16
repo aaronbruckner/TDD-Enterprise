@@ -454,6 +454,35 @@ describe('Ship', () => {
 
       });
 
+      describe('missile progression', () => {
+
+        it('should move 1 disance unit closer to target with every round', () => {
+          let target1 = {
+            id: 'target1',
+            distance: 5,
+            hit: () => {}
+          };
+          let target2 = {
+            id: 'target2',
+            distance: 3,
+            hit: () => {}
+          };
+
+          ship.fireMissile(target1);
+          ship.fireMissile(target2);
+
+          ship.nextRound();
+
+          assert.equal(ship.submodules.missileLauncher.targets[0].distance, 4, 'should decrease distance by 1 unit');
+          assert.equal(ship.submodules.missileLauncher.targets[1].distance, 2, 'should decrease distance by 1 unit');
+        });
+
+        it('should hit target when missile distance reaches 0', () => {
+
+        });
+
+      });
+
     });
 
   });

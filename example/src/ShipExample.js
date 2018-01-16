@@ -224,8 +224,17 @@ class ShipExample {
       }
     }
 
+    function moveMissiles() {
+      let i = 0;
+      while(i < self.submodules.missileLauncher.targets.length) {
+        self.submodules.missileLauncher.targets[i].distance--;
+        i++;
+      }
+    }
+
     repairSubmodule();
     regenerateShield();
+    moveMissiles();
 
     this.crew.engineer.assignedThisRound = false;
   }
