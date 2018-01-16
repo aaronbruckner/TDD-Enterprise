@@ -7,6 +7,7 @@
  */
 
 let assert = require('chai').assert;
+let sinon = require('sinon');
 let Ship = require('../src/ShipExample');
 
 describe('Ship', () => {
@@ -478,7 +479,58 @@ describe('Ship', () => {
         });
 
         it('should hit target when missile distance reaches 0', () => {
+          let target1 = {
+            id: 'target1',
+            distance: 2,
+            hit: sinon.spy()
+          };
+          let target2 = {
+            id: 'target2',
+            distance: 3,
+            hit: sinon.spy()
+          };
 
+          ship.fireMissile(target1);
+          ship.fireMissile(target2);
+
+          ship.nextRound();
+
+          assert.isFalse(target1.hit.called, 'should not invoke hit function until missle reaches target');
+          assert.isFalse(target2.hit.called, 'should not invoke hit function until missle reaches target');
+
+          ship.nextRound();
+
+          assert.isTrue(target1.hit.calledOnce, 'should invoke hit function when missle reaches target');
+          assert.isFalse(target2.hit.called, 'should not invoke hit function until missle reaches target');
+        });
+
+        it('should remove target after missle has hit it', () => {
+          let target1 = {
+            id: 'target1',
+            distance: 2,
+            hit: sinon.spy()
+          };
+          let target2 = {
+            id: 'target2',
+            distance: 3,
+            hit: sinon.spy()
+          };
+
+          ship.fireMissile(target1);
+          ship.fireMissile(target2);
+
+          ship.nextRound();
+
+          assert.equal(ship.submodules.missileLauncher.targets.length, 2, 'both targets should still be tracked');
+
+          ship.nextRound();
+
+          assert.equal(ship.submodules.missileLauncher.targets.length, 1, 'one target should still be tracked');
+          assert.equal(ship.submodules.missileLauncher.targets[0], target2, 'should remove target1 and only be tracking target2');
+
+          ship.nextRound();
+
+          assert.equal(ship.submodules.missileLauncher.targets.length, 0, 'no more targets should be tracked');
         });
 
       });

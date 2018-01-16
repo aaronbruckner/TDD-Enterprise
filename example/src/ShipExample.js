@@ -227,8 +227,13 @@ class ShipExample {
     function moveMissiles() {
       let i = 0;
       while(i < self.submodules.missileLauncher.targets.length) {
-        self.submodules.missileLauncher.targets[i].distance--;
-        i++;
+        let target = self.submodules.missileLauncher.targets[i];
+        if (--target.distance === 0) {
+          target.hit();
+          self.submodules.missileLauncher.targets.splice(i, 1);
+        } else {
+          i++;
+        }
       }
     }
 
