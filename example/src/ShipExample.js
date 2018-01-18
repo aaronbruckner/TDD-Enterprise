@@ -1,5 +1,7 @@
 'use strict';
 
+const _ = require('lodash');
+
 /**
  * DO NOT LOOK AT THIS UNTIL COMPLETING THE PROJECT!!! This is my personal ship implementation from all the tasks.
  *
@@ -230,16 +232,22 @@ class ShipExample {
     }
 
     function moveMissiles() {
-      let i = 0;
-      while(i < self.submodules.missileLauncher.targets.length) {
-        let target = self.submodules.missileLauncher.targets[i];
-        if (--target.distance === 0) {
-          target.hit();
-          self.submodules.missileLauncher.targets.splice(i, 1);
-        } else {
-          i++;
+      let targets = self.submodules.missileLauncher.targets;
+      for (let i = 0; i < targets.length; i++) {
+        let target = targets[i];
+        if (target && --target.distance === 0) {
+          targets[i] = null;
+          if (target.hit()) {
+            // Target has been destroyed, remove all other missiles targeting the same enemy.
+            for(let t = 0; t < targets.length; t++) {
+              if (targets[t] && targets[t].id === target.id) {
+                targets[t] = null;
+              }
+            }
+          }
         }
       }
+      _.pull(targets, null);
     }
 
     repairSubmodule();

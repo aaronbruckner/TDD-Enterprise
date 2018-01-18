@@ -533,6 +533,75 @@ describe('Ship', () => {
           assert.equal(ship.submodules.missileLauncher.targets.length, 0, 'no more targets should be tracked');
         });
 
+        it('should remove missiles targeting the same target if target is destroyed (hit returns true)', () => {
+          let target1Missile1 = {
+            id: 'target1',
+            distance: 1,
+            hit: sinon.stub()
+          };
+          let target1Missile2 = {
+            id: 'target1',
+            distance: 2,
+            hit: sinon.stub()
+          };
+          let target2Missile1 = {
+            id: 'target2',
+            distance: 1,
+            hit: sinon.stub()
+          };
+          let target2Missile2 = {
+            id: 'target2',
+            distance: 2,
+            hit: sinon.stub()
+          };
+
+          target1Missile1.hit.returns(true);
+          target2Missile1.hit.returns(false);
+
+          ship.fireMissile(target1Missile1);
+          ship.fireMissile(target1Missile2);
+          ship.fireMissile(target2Missile1);
+          ship.fireMissile(target2Missile2);
+
+          ship.nextRound();
+
+          assert.isTrue(target1Missile1.hit.calledOnce, 'should hit target1');
+          assert.isFalse(target1Missile2.hit.called, 'should not call target1Missile2 hit as first missle destroyed target');
+          assert.isTrue(target2Missile1.hit.calledOnce, 'should hit target2');
+          assert.isFalse(target2Missile2.hit.called, 'should not call target2Missile2 hit');
+          assert.equal(ship.submodules.missileLauncher.targets.length, 1, 'should have single missile remaining');
+          assert.equal(ship.submodules.missileLauncher.targets[0], target2Missile2, 'should keep target2Missile2');
+        });
+
+        it('should remove all missiles targeting the same target if target is destroyed without removing any other missiles', () => {
+          let target1Missile1 = {
+            id: 'target1',
+            distance: 2,
+            hit: sinon.stub()
+          };
+          let target1Missile2 = {
+            id: 'target1',
+            distance: 1,
+            hit: sinon.stub()
+          };
+          let target2Missile1 = {
+            id: 'target2',
+            distance: 2,
+            hit: sinon.stub()
+          };
+
+          target1Missile2.hit.returns(true);
+
+          ship.fireMissile(target1Missile1);
+          ship.fireMissile(target2Missile1);
+          ship.fireMissile(target1Missile2);
+
+          ship.nextRound();
+
+          assert.equal(ship.submodules.missileLauncher.targets.length, 1, 'should have single missile remaining');
+          assert.equal(ship.submodules.missileLauncher.targets[0], target2Missile1, 'should keep target2Missile1');
+        });
+
       });
 
       describe('status', () => {
