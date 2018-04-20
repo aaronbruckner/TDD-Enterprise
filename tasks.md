@@ -3,6 +3,7 @@
 * Write the least amount of code to make the test pass (even if it your code is not complete or functionally correct).
 * Repeat again and again until the tests have forced you to implement all the tasks including edge cases.
 * You may refactor after a passing test if needed so long as you don't change any functionality and all tests still pass.
+* Avoid exposing private functions to test, try to assert functionality by only calling public functions on the ship class.
 
 # Tasks
 The following tasks are roughly grouped by epic. Cards within each epic get progressively harder. Some of the more difficult
