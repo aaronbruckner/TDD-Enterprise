@@ -3,7 +3,6 @@ const assert = require('chai').assert;
 const proxyquire = require('proxyquire');
 
 const moduleUnderTest = require('../src/stubExamples/moduleUnderTest');
-const ClassA = require('../src/stubExamples/classA');
 const ComplexClassWithBadConstructor = require('../src/stubExamples/ComplexClassWithBadConstructor');
 
 /**
