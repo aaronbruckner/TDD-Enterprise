@@ -1,5 +1,10 @@
-let sinon = require('sinon');
-let assert = require('chai').assert;
+const sinon = require('sinon');
+const assert = require('chai').assert;
+const proxyquire = require('proxyquire');
+
+const moduleUnderTest = require('../src/stubExamples/moduleUnderTest');
+const ClassA = require('../src/stubExamples/classA');
+const ComplexClassWithBadConstructor = require('../src/stubExamples/ComplexClassWithBadConstructor');
 
 /**
  * This file shows off how to get started with the tools provided in this project.
@@ -98,6 +103,73 @@ describe('Testing framework Demo', () => {
 
       // Don't forget to restore that live outside the test. The best place to do this is in afterEach.
       myObject.hello.restore();
+    });
+
+  });
+
+  /**
+   * This shows some common stubbing you may have to do while unit testing.
+   */
+  describe('stub scenarios', () => {
+
+    describe('working with classes', () => {
+
+      /**
+       * Sometimes functions under test create new instances of external modules. Controlling their behavior can be
+       * helpful in determining if your module under test handles all possible cases (like exceptions or errors thrown
+       * by the external dependency. Sometimes these dependent objects do things in their constructors that you want
+       * to prevent in unit tests for other modules.
+       */
+      it('override method behavior on an instance of a class', () => {
+        class MyClass {
+          constructor() {
+
+          }
+          getInt() {
+            return 1;
+          }
+        }
+
+        // You must target the class' prototype to mock an instance's behavior when the function is invoked. MyClass
+        // constructor will still be invoked.
+        sinon.stub(MyClass.prototype, 'getInt').returns(42);
+
+        assert.equal(new MyClass().getInt(), 42);
+      });
+
+      it('prevent class constructor from running when used as dependency of a module under test', () => {
+        const complexClassStub = sinon.createStubInstance(ComplexClassWithBadConstructor);
+        const moduleUnderTest = proxyquire('../src/stubExamples/moduleUnderTest', {
+          './ComplexClassWithBadConstructor': function(){
+            return complexClassStub;
+          }
+        });
+
+        complexClassStub.getInt.returns(42);
+
+        assert.equal(moduleUnderTest.createComplexClassAndUseItToReturnAValue(), 42);
+      });
+
+      it('assert that a class dependency is created with the proper configuration', () => {
+        // Sometimes you have to confirm that a dependency is created with the proper configuration (such as the correct
+        // base URL).
+
+        const complexClassStub = sinon.createStubInstance(ComplexClassWithBadConstructor);
+        // Injected ComplexClass constructor that will be spyable.
+        const ComplexClassWithBadConstructorSpy = sinon.spy(function () {
+          return complexClassStub;
+        });
+        const moduleUnderTest = proxyquire('../src/stubExamples/moduleUnderTest', {
+          './ComplexClassWithBadConstructor': ComplexClassWithBadConstructorSpy
+        });
+
+        moduleUnderTest.createComplexClassAndUseItToReturnAValue('test');
+
+        // assert how you expect the constructor should be used
+        assert.isTrue(ComplexClassWithBadConstructorSpy.calledWithNew());
+        assert.equal(ComplexClassWithBadConstructorSpy.callCount, 1);
+        assert.isTrue(ComplexClassWithBadConstructorSpy.calledWithExactly('test'));
+      });
     });
 
   });
