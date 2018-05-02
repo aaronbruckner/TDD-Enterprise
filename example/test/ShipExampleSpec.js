@@ -7,6 +7,7 @@
  */
 
 let assert = require('chai').assert;
+let sinon = require('sinon');
 let Ship = require('../src/ShipExample');
 
 describe('Ship', () => {
@@ -75,25 +76,29 @@ describe('Ship', () => {
         assert.isFunction(ship.damageSubmodule, 'should expose function');
       });
 
-      it('should damage an OK submodule to DAMAGED', function () {
-        ship.damageSubmodule('shield');
+      ['shield', 'missileLauncher'].forEach((submodule) => {
+        describe('submodule ' + submodule, () => {
+          it('should damage an OK submodule to DAMAGED', function () {
+            ship.damageSubmodule(submodule);
 
-        assert.equal(ship.submodules.shield.status, 'DAMAGED', 'should damage submodule');
-      });
+            assert.equal(ship.submodules[submodule].status, 'DAMAGED', 'should damage submodule');
+          });
 
-      it('should damage a DAMAGED submodule to DESTROYED', function () {
-        ship.damageSubmodule('shield');
-        ship.damageSubmodule('shield');
+          it('should damage a DAMAGED submodule to DESTROYED', function () {
+            ship.damageSubmodule(submodule);
+            ship.damageSubmodule(submodule);
 
-        assert.equal(ship.submodules.shield.status, 'DESTROYED', 'should destroy submodule');
-      });
+            assert.equal(ship.submodules[submodule].status, 'DESTROYED', 'should destroy submodule');
+          });
 
-      it('should have no effect on a DESTROYED submodule', function () {
-        ship.damageSubmodule('shield');
-        ship.damageSubmodule('shield');
-        ship.damageSubmodule('shield');
+          it('should have no effect on a DESTROYED submodule', function () {
+            ship.damageSubmodule(submodule);
+            ship.damageSubmodule(submodule);
+            ship.damageSubmodule(submodule);
 
-        assert.equal(ship.submodules.shield.status, 'DESTROYED', 'should do nothing to a destroyed module');
+            assert.equal(ship.submodules[submodule].status, 'DESTROYED', 'should do nothing to a destroyed module');
+          });
+        });
       });
 
       it('should throw an exception if an unknown submodule is damaged', function () {
@@ -349,6 +354,447 @@ describe('Ship', () => {
 
           assert.equal(unabsorbedDamage, 15, 'should return all damage when two other shield are broken');
           assert.equal(ship.submodules.shield.right.hitpoints, 15, 'should not do any damage when two other shields are broken');
+        });
+
+      });
+
+      describe('shield destroyed', () => {
+
+        it('should drop all shield quadrants to zero hitpoints', () => {
+          ship.damageSubmodule('shield');
+          ship.damageSubmodule('shield');
+
+          assert.equal(ship.submodules.shield.front.hitpoints, 0, 'should drop front to zero hitpoints');
+          assert.equal(ship.submodules.shield.back.hitpoints, 0, 'should drop back to zero hitpoints');
+          assert.equal(ship.submodules.shield.left.hitpoints, 0, 'should drop left to zero hitpoints');
+          assert.equal(ship.submodules.shield.right.hitpoints, 0, 'should drop right to zero hitpoints');
+        });
+
+        it('should disable shield regeneration', () => {
+          ship.damageSubmodule('shield');
+          ship.damageSubmodule('shield');
+
+          ship.nextRound();
+
+          assert.equal(ship.submodules.shield.front.hitpoints, 0, 'should not heal front');
+          assert.equal(ship.submodules.shield.back.hitpoints, 0, 'should not heal back');
+          assert.equal(ship.submodules.shield.left.hitpoints, 0, 'should not heal left to');
+          assert.equal(ship.submodules.shield.right.hitpoints, 0, 'should not heal right to');
+        });
+
+        it('should restore shield regeneration after submodule is repaired', () => {
+          ship.damageSubmodule('shield');
+          ship.damageSubmodule('shield');
+          ship.assignEngineer('shield')
+
+          ship.nextRound();
+
+          assert.equal(ship.submodules.shield.front.hitpoints, 5, 'should heal front after shield module repaired');
+        });
+
+        it('should not allow any damage to shield to be absorbed', () => {
+          ship.damageSubmodule('shield');
+          ship.damageSubmodule('shield');
+
+          assert.equal(ship.damageShield('front', 10), 10, 'should return all damage as unabsorbed');
+        });
+
+        it('should not allow a single fully charged shield to absorb damage while the other quadrants are still broken', () => {
+          ship.damageSubmodule('shield');
+          ship.damageSubmodule('shield');
+          ship.assignEngineer('shield');
+
+          ship.nextRound();
+          ship.nextRound();
+          ship.nextRound();
+          ship.nextRound();
+
+          assert.equal(ship.damageShield('front', 10), 10, 'should retun all damage as unabsorbed if only one quadrant has been restored');
+        });
+
+      });
+    });
+
+    describe('missileLauncher', () => {
+
+      it('should exist', () => {
+        assert.isObject(ship.submodules.missileLauncher, 'should have missileLauncher submodule');
+      });
+
+      it('should have a status', () => {
+        assert.isString(ship.submodules.missileLauncher.status, 'should have status');
+      });
+
+      it('should initialize to status "OK"', () => {
+        assert.equal(ship.submodules.missileLauncher.status, 'OK', 'should start as status OK');
+      });
+
+      describe('fireMissile', () => {
+
+        it('should start with zero targets', () => {
+          assert.isArray(ship.submodules.missileLauncher.targets, 'should track targets in an array');
+          assert.equal(ship.submodules.missileLauncher.targets.length, 0, 'should start with 0 targets');
+        });
+
+        it('should be defined', () => {
+          assert.isFunction(ship.fireMissile, 'should define function');
+        });
+
+        it('should add new target to list of tracked targets', () => {
+          let target = {
+            id: 'enemyShip1',
+            distance: 5,
+            hit: () => {}
+          };
+
+          ship.fireMissile(target);
+
+          assert.equal(ship.submodules.missileLauncher.targets.length, 1, 'should be 1 target');
+          assert.equal(ship.submodules.missileLauncher.targets[0], target, 'should add provided target to targets');
+        });
+
+      });
+
+      describe('missile progression', () => {
+
+        it('should move 1 disance unit closer to target with every round', () => {
+          let target1 = {
+            id: 'target1',
+            distance: 5,
+            hit: () => {}
+          };
+          let target2 = {
+            id: 'target2',
+            distance: 3,
+            hit: () => {}
+          };
+
+          ship.fireMissile(target1);
+          ship.fireMissile(target2);
+
+          ship.nextRound();
+
+          assert.equal(ship.submodules.missileLauncher.targets[0].distance, 4, 'should decrease distance by 1 unit');
+          assert.equal(ship.submodules.missileLauncher.targets[1].distance, 2, 'should decrease distance by 1 unit');
+        });
+
+        it('should hit target when missile distance reaches 0', () => {
+          let target1 = {
+            id: 'target1',
+            distance: 2,
+            hit: sinon.spy()
+          };
+          let target2 = {
+            id: 'target2',
+            distance: 3,
+            hit: sinon.spy()
+          };
+
+          ship.fireMissile(target1);
+          ship.fireMissile(target2);
+
+          ship.nextRound();
+
+          assert.isFalse(target1.hit.called, 'should not invoke hit function until missle reaches target');
+          assert.isFalse(target2.hit.called, 'should not invoke hit function until missle reaches target');
+
+          ship.nextRound();
+
+          assert.isTrue(target1.hit.calledOnce, 'should invoke hit function when missle reaches target');
+          assert.isFalse(target2.hit.called, 'should not invoke hit function until missle reaches target');
+        });
+
+        it('should remove target after missle has hit it', () => {
+          let target1 = {
+            id: 'target1',
+            distance: 2,
+            hit: sinon.spy()
+          };
+          let target2 = {
+            id: 'target2',
+            distance: 3,
+            hit: sinon.spy()
+          };
+
+          ship.fireMissile(target1);
+          ship.fireMissile(target2);
+
+          ship.nextRound();
+
+          assert.equal(ship.submodules.missileLauncher.targets.length, 2, 'both targets should still be tracked');
+
+          ship.nextRound();
+
+          assert.equal(ship.submodules.missileLauncher.targets.length, 1, 'one target should still be tracked');
+          assert.equal(ship.submodules.missileLauncher.targets[0], target2, 'should remove target1 and only be tracking target2');
+
+          ship.nextRound();
+
+          assert.equal(ship.submodules.missileLauncher.targets.length, 0, 'no more targets should be tracked');
+        });
+
+        it('should remove missiles targeting the same target if target is destroyed (hit returns true)', () => {
+          let target1Missile1 = {
+            id: 'target1',
+            distance: 1,
+            hit: sinon.stub()
+          };
+          let target1Missile2 = {
+            id: 'target1',
+            distance: 2,
+            hit: sinon.stub()
+          };
+          let target2Missile1 = {
+            id: 'target2',
+            distance: 1,
+            hit: sinon.stub()
+          };
+          let target2Missile2 = {
+            id: 'target2',
+            distance: 2,
+            hit: sinon.stub()
+          };
+
+          target1Missile1.hit.returns(true);
+          target2Missile1.hit.returns(false);
+
+          ship.fireMissile(target1Missile1);
+          ship.fireMissile(target1Missile2);
+          ship.fireMissile(target2Missile1);
+          ship.fireMissile(target2Missile2);
+
+          ship.nextRound();
+
+          assert.isTrue(target1Missile1.hit.calledOnce, 'should hit target1');
+          assert.isFalse(target1Missile2.hit.called, 'should not call target1Missile2 hit as first missle destroyed target');
+          assert.isTrue(target2Missile1.hit.calledOnce, 'should hit target2');
+          assert.isFalse(target2Missile2.hit.called, 'should not call target2Missile2 hit');
+          assert.equal(ship.submodules.missileLauncher.targets.length, 1, 'should have single missile remaining');
+          assert.equal(ship.submodules.missileLauncher.targets[0], target2Missile2, 'should keep target2Missile2');
+        });
+
+        it('should remove all missiles targeting the same target if target is destroyed without removing any other missiles', () => {
+          let target1Missile1 = {
+            id: 'target1',
+            distance: 2,
+            hit: sinon.stub()
+          };
+          let target1Missile2 = {
+            id: 'target1',
+            distance: 1,
+            hit: sinon.stub()
+          };
+          let target2Missile1 = {
+            id: 'target2',
+            distance: 2,
+            hit: sinon.stub()
+          };
+
+          target1Missile2.hit.returns(true);
+
+          ship.fireMissile(target1Missile1);
+          ship.fireMissile(target2Missile1);
+          ship.fireMissile(target1Missile2);
+
+          ship.nextRound();
+
+          assert.equal(ship.submodules.missileLauncher.targets.length, 1, 'should have single missile remaining');
+          assert.equal(ship.submodules.missileLauncher.targets[0], target2Missile1, 'should keep target2Missile1');
+        });
+
+      });
+
+      describe('status', () => {
+
+        describe('DAMAGED', () => {
+
+          it('should damage the hull by 1 hitpoint"', () => {
+            ship.damageSubmodule('missileLauncher');
+
+            let target = {
+              id: 'enemyShip1',
+              distance: 5,
+              hit: () => {}
+            };
+            ship.fireMissile(target);
+
+            assert.equal(ship.hitpoints, 99, 'should hurt ship for 1 hitpoint');
+          });
+
+          it('should not drop hull below zero hitpoints"', () => {
+            ship.damageSubmodule('missileLauncher');
+            ship.damageShip(100);
+
+            let target = {
+              id: 'enemyShip1',
+              distance: 5,
+              hit: () => {}
+            };
+            ship.fireMissile(target);
+
+            assert.equal(ship.hitpoints, 0, 'should not drop ship below 0 hitpoints');
+          });
+
+          it('should not fire a missile if the hull has 0 hitpoints', () => {
+            ship.damageSubmodule('missileLauncher');
+            ship.damageShip(100);
+
+            let target = {
+              id: 'enemyShip1',
+              distance: 5,
+              hit: () => {}
+            };
+            ship.fireMissile(target);
+
+            assert.equal(ship.submodules.missileLauncher.targets.length, 0, 'should not launch missile if ship has 0 hitpoints');
+          });
+
+        });
+
+        describe('DESTROYED', () => {
+
+          it('should not fire a missile', () => {
+            ship.damageSubmodule('missileLauncher');
+            ship.damageSubmodule('missileLauncher');
+
+            let target = {
+              id: 'enemyShip1',
+              distance: 5,
+              hit: () => {}
+            };
+            ship.fireMissile(target);
+
+            assert.equal(ship.submodules.missileLauncher.targets.length, 0, 'should not launch missile if submodule is destroyed');
+          });
+
+        });
+
+      });
+
+    });
+
+  });
+
+  describe('crew', () => {
+
+    it('should have a crew property', () => {
+      assert.isObject(ship.crew, 'should have a crew property');
+    });
+
+    describe('engineer', () => {
+
+      it('should have an engineer', () => {
+        assert.isObject(ship.crew.engineer, 'should have an engineer');
+      });
+
+      describe('assignEngineer', () => {
+
+        it('should be defined', () => {
+          assert.isFunction(ship.assignEngineer, 'should define function');
+        });
+
+        it('should default engineer to no assigned submodule', () => {
+          assert.isNull(ship.crew.engineer.assignedSubmodule, 'should default engineer to no submodule');
+        });
+
+        ['shield', 'missileLauncher'].forEach((submodule) => {
+          it('should assign engineer to submodule: ' + submodule, () => {
+            ship.assignEngineer(submodule);
+
+            assert.equal(ship.crew.engineer.assignedSubmodule, submodule, 'should move engineer to assigned submodule');
+          });
+        });
+
+        it('should only allow the engineer to be assigned once per round', () => {
+          ship.assignEngineer('shield');
+          ship.assignEngineer('missileLauncher');
+
+          assert.equal(ship.crew.engineer.assignedSubmodule, 'shield', 'should wait until next round to allow second assingment');
+        });
+
+        it('should allow the engineer to be assigned after a round has passed', () => {
+          ship.assignEngineer('shield');
+          ship.nextRound();
+          ship.assignEngineer('missileLauncher');
+
+          assert.equal(ship.crew.engineer.assignedSubmodule, 'missileLauncher', 'should allow second assignment after round');
+        });
+
+        it('should unassign the engineer if null is passed', () => {
+          ship.assignEngineer('shield');
+          ship.nextRound();
+          ship.assignEngineer(null);
+
+          assert.isNull(ship.crew.engineer.assignedSubmodule, 'should unassign the engineer');
+        });
+
+        it('should throw an exception if an unknown submodule is passed in', () => {
+          let test = () => {
+            ship.assignEngineer('unknown');
+          };
+
+          assert.throws(test, 'Invalid submodule provided');
+        });
+
+      });
+
+      describe('submodule repair', () => {
+
+        it('should do nothing if engineer is not assigned', () => {
+          ship.damageSubmodule('shield');
+          ship.damageSubmodule('missileLauncher');
+
+          ship.nextRound();
+
+          assert.equal(ship.submodules.shield.status, 'DAMAGED', 'should do nothing to submodule status');
+          assert.equal(ship.submodules.missileLauncher.status, 'DAMAGED', 'should do nothing to submodule status');
+        });
+
+        it('should wait until the next round to repair the submodule', () => {
+          ship.damageSubmodule('shield');
+
+          ship.assignEngineer('shield');
+
+          assert.equal(ship.submodules.shield.status, 'DAMAGED', 'should not improve shield status until next round');
+        });
+
+        it('should improve a DAMAGED submodule', () => {
+          ship.damageSubmodule('missileLauncher');
+          ship.damageSubmodule('shield');
+          ship.assignEngineer('shield');
+
+          ship.nextRound();
+
+          assert.equal(ship.submodules.shield.status, 'OK', 'should improve shield status');
+          assert.equal(ship.submodules.missileLauncher.status, 'DAMAGED', 'should do nothing to missileLauncher status');
+        });
+
+        it('should improve a DESTROYED submodule', () => {
+          ship.damageSubmodule('shield');
+          ship.damageSubmodule('shield');
+          ship.assignEngineer('shield');
+
+          ship.nextRound();
+
+          assert.equal(ship.submodules.shield.status, 'DAMAGED', 'should do nothing to submodule status');
+        });
+
+        it('should do nothing to an OK submodule', () => {
+          ship.assignEngineer('shield');
+
+          ship.nextRound();
+
+          assert.equal(ship.submodules.shield.status, 'OK', 'should do nothing to shield status');
+        });
+
+        it('should repair a module before any other actions occur in a ship', () => {
+          ship.damageShield('front', 10);
+          ship.damageSubmodule('shield');
+          ship.assignEngineer('shield');
+
+          ship.nextRound();
+
+          assert.equal(ship.submodules.shield.front.hitpoints, 30, 'should repair module before regeneration occurs');
         });
 
       });

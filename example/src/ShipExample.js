@@ -1,5 +1,7 @@
 'use strict';
 
+const _ = require('lodash');
+
 /**
  * DO NOT LOOK AT THIS UNTIL COMPLETING THE PROJECT!!! This is my personal ship implementation from all the tasks.
  *
@@ -21,6 +23,10 @@ const SHIELD_QUADRANTS = {
   }
 };
 
+/**
+* Constructs a ship. Ships have weapons, crew, and shields.
+* @constructor
+*/
 class ShipExample {
   constructor() {
     this.hitpoints = 100;
@@ -39,10 +45,26 @@ class ShipExample {
         right: {
           hitpoints: SHIELD_QUADRANTS.right.MAX
         }
+      },
+      missileLauncher: {
+        status: 'OK',
+        targets: []
+      }
+    };
+    this.crew = {
+      engineer: {
+        assignedSubmodule: null,
+        assignedThisRound: false
       }
     };
   }
 
+  /**
+  * Checks a shield quadrant's remaining shield percentage.
+  *
+  * @param {string} quadrantKey - the shield quadrant to calculate percentage for.
+  * @returns a whole number (0-100) representing the percentage of remaining shield for the given quadrantKey
+  */
   calculateShieldPercentage(quadrantKey) {
     if (!Object.keys(SHIELD_QUADRANTS).includes(quadrantKey)) {
       throw new Error('Invalid shield quadrant provided');
@@ -51,12 +73,25 @@ class ShipExample {
     return Math.round(this.submodules.shield[quadrantKey].hitpoints / SHIELD_QUADRANTS[quadrantKey].MAX * 100);
   }
 
+  /**
+  * If the ship is under fire, its hull can be damaged. Removes hitpoints from the ship.
+  * A ship's hitpoints cannot drop below zero.
+  *
+  * @param {number} damage - the total damage to deal to the ship.
+  */
   damageShip(damage) {
     this.hitpoints = Math.max(this.hitpoints - damage, 0);
   }
 
+  /**
+  * Damages a specific shield quadrant (front, back, left, right) by the provided damage.
+  *
+  * @param {string} quadrantKey - the shield quadrant to apply the damage to.
+  * @param {number} damage - the total damage to deal to the ship.
+  * @returns {number} - any damage that is not absorbed by the shield is returned. If all damage is absorbed, 0 is returned.
+  */
   damageShield(quadrantKey, damage) {
-    if (!['front', 'back', 'left', 'right'].includes(quadrantKey)) {
+    if (!Object.keys(SHIELD_QUADRANTS).includes(quadrantKey)) {
       throw new Error('Invalid shield quadrant provided');
     }
 
@@ -68,7 +103,7 @@ class ShipExample {
       }
     });
 
-    if (totalBrokenQuadrants === 2) {
+    if (totalBrokenQuadrants >= 2) {
       return damage;
     }
 
@@ -84,18 +119,82 @@ class ShipExample {
     return hitpoints < 0 ? Math.abs(hitpoints) : 0;
   }
 
+  /**
+  * Submodules can be damaged or destroyed in combat. Damaged submodules are less effective.
+  * This degrades the submodule by one status (OK -> DAMAGED, DAMAGED -> DESTROYED). This has no
+  * effect on destroyed submodules.
+  *
+  * @param {string} submodule - the name of the submodule to damage.
+  */
   damageSubmodule(submodule) {
     if (!this.submodules[submodule]) {
       throw new Error('Invalid submodule provided');
     }
 
     this.submodules[submodule].status = this.submodules[submodule].status === 'OK' ? 'DAMAGED' : 'DESTROYED';
+
+    if (this.submodules.shield.status === 'DESTROYED') {
+      Object.keys(SHIELD_QUADRANTS).forEach((quadrantKey) => {
+        this.submodules.shield[quadrantKey].hitpoints = 0;
+      });
+    }
   }
 
+  /**
+  * The engineer can repair damaged or destroyed submodules. To do so he first must
+  * be assigned to a submodule. Repairs occur every round. An engineer can only be
+  * moved once per round. Any additional assignemts before the round passes will be ignored.
+  *
+  * @param {string} submodule - the name of the submodule to move the engineer to.
+  */
+  assignEngineer(submodule) {
+    if (submodule !== null && !this.submodules[submodule]) {
+      throw new Error('Invalid submodule provided');
+    }
+
+    if (this.crew.engineer.assignedThisRound) {
+      return;
+    }
+
+    this.crew.engineer.assignedThisRound = true;
+    this.crew.engineer.assignedSubmodule = submodule;
+  }
+
+  /**
+  * Launches a missle at the target.
+  * @param {object} target - the target to launch a missle at.
+  * @param {string} target.id - the unique identifier for the target. Multiple targets with the same id are targetting the
+  *                             same physical enemy.
+  * @param {number} target.distance - indicates how far away the missile is from the target.
+  * @param {function} target.hit - function to invoke once the missile reaches its target.
+  */
+  fireMissile(target) {
+    if (this.submodules.missileLauncher.status === 'DAMAGED') {
+      this.damageShip(1);
+    }
+    if (this.hitpoints > 0 && this.submodules.missileLauncher.status !== 'DESTROYED') {
+      this.submodules.missileLauncher.targets.push(target);
+    }
+  }
+
+  /**
+  * Time must pass for certian actions to occur. They are all processed here.
+  */
   nextRound() {
     let self = this;
 
+    function repairSubmodule() {
+      let assignedSubmodule = self.crew.engineer.assignedSubmodule;
+      if (assignedSubmodule) {
+          self.submodules[assignedSubmodule].status = self.submodules[assignedSubmodule].status === 'DESTROYED' ? 'DAMAGED' : 'OK';
+      }
+    }
+
     function regenerateShield() {
+      if (self.submodules.shield.status === 'DESTROYED') {
+        return;
+      }
+
       let lowestQuadrant, lowestQuadrantKey = null;
       let quadrantKeys = Object.keys(SHIELD_QUADRANTS);
 
@@ -132,11 +231,31 @@ class ShipExample {
       }
     }
 
+    function moveMissiles() {
+      let targets = self.submodules.missileLauncher.targets;
+      for (let i = 0; i < targets.length; i++) {
+        let target = targets[i];
+        if (target && --target.distance === 0) {
+          targets[i] = null;
+          if (target.hit()) {
+            // Target has been destroyed, remove all other missiles targeting the same enemy.
+            for(let t = 0; t < targets.length; t++) {
+              if (targets[t] && targets[t].id === target.id) {
+                targets[t] = null;
+              }
+            }
+          }
+        }
+      }
+      _.pull(targets, null);
+    }
+
+    repairSubmodule();
     regenerateShield();
+    moveMissiles();
+
+    this.crew.engineer.assignedThisRound = false;
   }
-
-
-
 }
 
 module.exports = ShipExample;

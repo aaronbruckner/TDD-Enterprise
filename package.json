@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "mocha test/**",
-    "testExample": "mocha example/test/** || true"
+    "test": "mocha --recursive --watch test",
+    "testExample": "mocha --recursive --watch example || true"
   },
   "repository": {
     "type": "git",
@@ -22,5 +22,8 @@
     "mocha": "^4.0.1",
     "proxyquire": "^2.0.1",
     "sinon": "^4.0.2"
+  },
+  "dependencies": {
+    "lodash": "^4.17.4"
   }
 }

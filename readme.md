@@ -4,7 +4,7 @@ Plug n' play playground to experience test-driven development as a team.
 
 # I'm already skipping ahead, how do I get going?
 
-Run: 
+Run:
 ```
 (Install node version 6 or greater if you don't already have it: https://nodejs.org/en/download/)
 (If you lack git in your commandline, download and unzip from github: https://github.com/aaronbruckner/TDD-Enterprise)
@@ -31,7 +31,7 @@ A short demo of the tools available can be found at ```test/frameworkDemoSpec.js
 # How do I TDD?
 
 At a minimum, not a single line of code before a failing test. Period. It's going to be really hard at first. As engineers,
-we see the solution 5 steps ahead and run towards it. 
+we see the solution 5 steps ahead and run towards it.
 
 For this exercise, the tests should force you to write the code. You should consistently try to implement the least amount
 of code to see green tests (even if what you have isn't functionally correct or complete).
@@ -58,7 +58,7 @@ function add(a, b) {
 }
 ```
 
-This will indeed make the test pass, but is it the minimal code needed to make our single test pass? 
+This will indeed make the test pass, but is it the minimal code needed to make our single test pass?
 
 What about this?
 ```
@@ -76,4 +76,31 @@ first time you run it? At that point you've turned the development cycle upside 
 
 And that's pretty damn cool.
 
-Aaron
+# More tips and Aaron's thoughts on TDD
+
+* Good unit tests read top-down like a book. I personally am much more willing to have duplicate code in my unit tests if it
+makes it easy to see everything at play in the tests. Avoid having too many helper functions as tracing all this down makes it
+harder to determine the environmental state tests are executed in.
+* Mocking is only ever additive. If you are setting up positive path mocks in your beforeEach for every test, you are probably
+doing it wrong (as you will need to undo your success mocks when testing negative paths). If you ever have to undo a beforeEach
+mock in your test, STOP. Do not go down this slippery slope. Take the time to move the conflicting stubs out of beforeEach and
+into every test that needs the differing behavior. If you continue to setup, undo, and re-mock behavior, your tests will be very
+hard to follow.
+* Never have master mocks that handle logic for every test. They usually look like a single mock that has a huge switch function
+trying to determine what path is being tested and therefore how it should respond. You might as well not use your mocking library
+at this point. Mocks should be setup before every test and external dependencies should be told exactly how to respond given a
+certain input. This makes it easy to see assumptions made for external contracts and makes your tests far more understandable.
+* Know your contracts. If your code makes a network call to another service, fully understand its contract before
+writing tests for it. Curl it, play around with the real service. Do not guess or write tests based on weak understandings. By knowing your
+external contracts, you can frequently TDD code that will work perfectly on the first run.
+* Don't test private functions. Identify true inputs and outputs of the system. Implementation details should not be tested but its measurable
+effects on the system should be. Sometimes internal network calls can seem like internal code however they make great measurable outputs for
+your unit test (and they also happen to be external modules that you cannot unit test). Find an easy network library (like Request) that allows
+you to assert that your code is making a well-formed request to the service and mock the responses as if they were being returned from the service
+itself. Doing this will allow you to unit test every single possible scenario with an external service!
+* Projects are complex. We break down large software packages into modules and functions because the entire task is too complex to throw into
+a single file. This complexity doesn't disappear when writing tests. While you should avoid stubbing internal modules when ever possible, sometimes
+a module is hiding very complex interactions that you don't want to handle in every other module using it. Good examples of complex modules might be
+modules that make network calls or store items in a file system. Mocking out low level complexity like this in every module that uses these base modules
+will make your tests hard to follow and modify. Sometimes having a well defined contracts for these base modules is easier to test and understand. However you
+run the risk of having tests rely on bad mocks if you ever modify these base modules.
