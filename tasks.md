@@ -56,6 +56,8 @@ console.log(ship.submodules.shield.status); // DAMAGED
 ```
 
 ## 4 - Shield Submodule
+Implementation of the shield module provides lots of opportunities to test and catch growing egde cases as your submodule
+becomes more and more complex.
 
 #### 4.1 - Expose new shield submodule
 Add new shield submodule to ship.submodules. Shield submodule should contain four quadrants (front, back, left, right).
@@ -112,6 +114,8 @@ all shield quadrants should drop to zero and become broken. Shield regeneration 
 elevated to ```DAMAGED```.
 
 ## 5 - Missile Launcher SubModule
+Implementing the missile launcher provides practice with testing code that invokes external dependencies. How these external
+dependencies are utilized by the module under test makes for great unit tests. 
 
 #### 5.1 - Add missile launcher submodule
 A ship cant fire missiles without a missile launcher. Add the ```missileLauncher``` submodule.
@@ -181,3 +185,55 @@ The Engineer can move about the ship to repair ```DAMAGED``` or ```DESTROYED``` 
 #### 7.3 - Repair damaged submodules (Requires 3.2)
 If the Engineer is assigned to a submodule, when a round passes he can improve the status of the submodule by one
 rank (```DESTROYED``` to ```DAMAGED``` to ```OK```). The Engineer can only repair the module he is assigned to.
+
+# In Development (working on adding new content!)
+## 8 - Deep Space Comm Net
+Adding a communication network to your ship allows you to practice mocking out network calls & time. Understanding
+external APIs that you will be making requests to is vital for writing effective, valid unit tests. You should avoid
+TDDing until you fully understand the contracts your mocks should adhere to.
+
+#### Set Ship Position
+
+#### Set Ship Call Sign
+
+#### Report Ship Location & Status
+Add function ```reportIn(callback)``` that 
+
+#### Scan for New Contacts
+Add function ```scanForContacts(range, callback)```. This function should poll the list of reported ships 3 times with a 
+10 second gap between each call. After 3 checks have been made, the callback property should be invoked with a single 
+array of contacts. Contacts in this array should only contain ships that are within euclidean range of this ship's
+current position.
+
+The API for getting a list of contacts with their callsigns and positions is:
+```
+Endpoint: GET https://<serviceUrl>/contacts
+
+Response Body:
+    [
+        // Contact 1
+        {
+            "callSign": "zulu",
+            "x": 32,
+            "y": -40
+        },
+        ... addition contacts
+    ]
+```
+
+The array returned from ```GET /contacts``` can be empty.
+
+Once polling has completed and in range contacts have bene found, the callback should be invoked once like:
+
+```
+callback([
+    {
+        "callSign": "zulu",
+        "x": 32,
+        "y": -40
+    },
+    ... // Other contacts that were within 
+])
+```
+
+#### Order New Contacts by Proximity
