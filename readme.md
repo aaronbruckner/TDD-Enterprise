@@ -1,6 +1,9 @@
 # Purpose
 
-Plug n' play playground to experience test-driven development as a team.
+Plug n' play playground to experience test-driven development as a team. Two testing frameworks are supported:
+
+* Jest
+* Mocha with Sinon/Chai
 
 # I'm already skipping ahead, how do I get going?
 
@@ -10,21 +13,26 @@ Run:
 (If you lack git in your commandline, download and unzip from github: https://github.com/aaronbruckner/TDD-Enterprise)
 
 git clone https://github.com/aaronbruckner/TDD-Enterprise.git
-cd TDD-Enterprise/
+
+(Select your desired testing framework to implement tests in and CD into the directory)
+cd TDD-Enterprise/testingFrameworks/<(jest, mochaWithSinon)>
+
 npm install
 ```
 
-From the project root, run ```npm test``` to execute your tests. While TDDing, you will make a failing test, write the
+From the framework directory, run ```npm test``` to execute your tests. While TDDing, you will make a failing test, write the
 minimal code needed to make it pass, and repeat this process again and again.
 
 ```src/Ship.js``` is where you will implement your ship. ```test/ShipSpec.js``` is where you will write the tests to
 force your implementation of the class.
 
 Tasks are located in ```tasks.md```. They are grouped into different "epics". Tasks within each epic become increasingly
-difficult.
+difficult. All tasks can be implemented reguardless of the testing framework you select.
 
-A short demo of the tools available can be found at ```test/frameworkDemoSpec.js```. Additional resources are located at:
+A short demo of the tools available can be found at ```<desiredTestingFramework>/test/frameworkDemoSpec.js```. Additional resources are located at:
 
+* Jest (test runner, assertion library, mocking library) - https://facebook.github.io/jest/docs/en/getting-started.html
+* Mocha (test runner) - https://mochajs.org/
 * Chai (assertion library) - http://chaijs.com/api/assert/
 * Sinon (mocking library) - http://sinonjs.org/releases/v4.0.2/
 

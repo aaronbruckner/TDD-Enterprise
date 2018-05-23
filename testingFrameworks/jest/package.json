@@ -1,27 +1,24 @@
 {
-  "name": "tdd-enterprise",
+  "name": "tdd-enterprise-jest",
   "version": "1.0.0",
-  "description": "",
+  "description": "A bare framework to start TDDing using jest.",
   "main": "index.js",
   "scripts": {
-    "test": "mocha --recursive --watch test",
-    "testExample": "mocha --recursive --watch example || true"
+    "test": "jest --watch --testPathPattern test/**",
+    "testExample": "jest --watch --testPathPattern example/**"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aaronbruckner/TDD-Enterprise.git"
   },
-  "author": "",
+  "author": "Aaron Bruckner",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/aaronbruckner/TDD-Enterprise/issues"
   },
   "homepage": "https://github.com/aaronbruckner/TDD-Enterprise#readme",
   "devDependencies": {
-    "chai": "^4.1.2",
-    "mocha": "^4.0.1",
-    "proxyquire": "^2.0.1",
-    "sinon": "^4.0.2"
+    "jest": "^22.4.4"
   },
   "dependencies": {
     "lodash": "^4.17.4"
