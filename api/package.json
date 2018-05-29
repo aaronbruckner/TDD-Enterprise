@@ -1,0 +1,19 @@
+{
+  "name": "tddenterpriseapi",
+  "version": "1.0.0",
+  "description": "Serverless backend for TDD workshop. Focused on providing a minimal cost API.",
+  "main": "src/index.js",
+  "author": "Aaron Bruckner",
+  "license": "MIT",
+  "dependencies": {
+    "aws-sdk": "^2.245.1"
+  },
+  "scripts": {
+    "test": "jest --watch",
+    "package": "sam package --template-file template.yaml --s3-bucket aaronbruckner-templates --output-template-file build/template.yaml",
+    "deploy": "sam deploy --template-file build/template.yaml --stack-name tdd-enterprise-api --capabilities CAPABILITY_IAM"
+  },
+  "devDependencies": {
+    "jest": "^22.4.4"
+  }
+}

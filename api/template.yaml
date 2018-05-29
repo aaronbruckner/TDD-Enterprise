@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: TODO
+
+Globals:
+  Function:
+    Timeout: 3
+
+
+Resources:
+  latestContacts:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./src
+      Handler: app.contactsGET
+      Runtime: nodejs8.10
+      Events:
+        # Gets a list of registered contacts
+        restRequest:
+          Type: Api
+          Properties:
+            Path: /contacts
+            Method: get
+  updateContact:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./src
+      Handler: app.contactsPUT
+      Runtime: nodejs8.10
+      Events:
+        # Registers a ship with its call sign and position
+        restRequest:
+          Type: Api
+          Properties:
+            Path: /contacts
+            Method: put
+
+Outputs:
+    ApiUrl:
+      Description: "API Gateway endpoint URL."
+      Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
