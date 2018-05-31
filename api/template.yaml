@@ -2,26 +2,37 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: TODO
 
+Parameters:
+  apiBucket:
+    Type: String
+    Description: The S3 bucket to use for API storage. This bucket should be dedicated to the API and is used to store
+      data such as the list of known ship contacts.
+    Default: aaronbruckner-tdd-enterprise-api
+
 Globals:
   Function:
     Timeout: 3
 
-
 Resources:
-  latestContacts:
+  # Gets a list of registered contacts (ship location and call sign)
+  contactsGet:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./src
       Handler: app.contactsGET
       Runtime: nodejs8.10
       Events:
-        # Gets a list of registered contacts
         restRequest:
           Type: Api
           Properties:
             Path: /contacts
             Method: get
-  updateContact:
+      Environment:
+        Variables:
+          API_BUCKET: !Ref apiBucket
+
+  # Update a ship's location/call sign
+  contactsPut:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./src
@@ -34,8 +45,11 @@ Resources:
           Properties:
             Path: /contacts
             Method: put
+      Environment:
+        Variables:
+          API_BUCKET: !Ref apiBucket
 
 Outputs:
     ApiUrl:
       Description: "API Gateway endpoint URL."
-      Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+      Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"

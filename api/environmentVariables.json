@@ -1,0 +1,8 @@
+{
+  "contactsGet": {
+    "API_BUCKET": "aaronbruckner-tdd-enterprise-api"
+  },
+  "contactsPut": {
+    "API_BUCKET": "aaronbruckner-tdd-enterprise-api"
+  }
+}

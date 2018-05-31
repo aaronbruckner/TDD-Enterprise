@@ -1,7 +1,7 @@
 'use strict';
 
-// const AWS = require('aws-sdk');
-// const s3 = new AWS.S3();
+const AWS = require('aws-sdk');
+const s3 = new AWS.S3();
 
 /**
  * Gets a list of reported contacts. Ships can invoke this endpoint to see every ship that has reported their call sign
@@ -12,13 +12,31 @@
  * @param callback
  */
 function contactsGET (event, context, callback) {
-  // let s3 = new AWS.S3();
-  // s3.listObjectsV2();
-  callback(null, {
-    'statusCode': 200,
-    'body': JSON.stringify({
-      message: 'Contacts GET'
-    })
+  const params = {
+    Bucket: process.env.API_BUCKET
+  };
+  s3.listObjectsV2(params, (err, data) => {
+    if (err) {
+      return callback(null, {
+        statusCode: 500,
+        body: JSON.stringify({
+          error: 'DATABASE_ERROR'
+        })
+      });
+    }
+
+    const response = {};
+    data.Contents.forEach((content) => {
+      const parts = content.Key.split('/');
+      response[parts[0]] = {
+        x: Number(parts[1]),
+        y: Number(parts[2])
+      }
+    });
+    callback(null, {
+      statusCode: 200,
+      body: JSON.stringify(response)
+    });
   });
 };
 
@@ -28,15 +46,26 @@ function contactsGET (event, context, callback) {
  * @param context
  * @param callback
  */
-// contactsPUT = async (event, context, callback) => {
-//   callback(null, {
-//     'statusCode': 200,
-//     'body': JSON.stringify({
-//       message: 'Contacts PUT'
-//     })
-//   });
-// };
+function contactsPUT (event, context, callback) {
+  // const params = {
+  //   Bucket: process.env.API_BUCKET,
+  //   Key: 'helloWorld/12/13'
+  // };
+  // s3.putObject(params, (err, data) => {
+  //   callback(null, {
+  //     statusCode: 200,
+  //     body: JSON.stringify(err)
+  //   });
+  // });
+  // callback(null, {
+  //   'statusCode': 200,
+  //   'body': JSON.stringify({
+  //     message: 'Contacts PUT'
+  //   })
+  // });
+};
 
 module.exports = {
-  contactsGET
+  contactsGET,
+  contactsPUT
 };
