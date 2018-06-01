@@ -47,6 +47,12 @@ function contactsGET (event, context, callback) {
  * @param callback
  */
 function contactsPUT (event, context, callback) {
+  const params = {
+    Bucket: process.env.API_BUCKET
+  };
+  s3.listObjectsV2(params, (err, data) => {
+
+  });
   // const params = {
   //   Bucket: process.env.API_BUCKET,
   //   Key: 'helloWorld/12/13'

@@ -125,5 +125,52 @@ describe('contacts PUT', () => {
   test('should define a function for contacts GET', () => {
     expect(typeof app.contactsPUT).toEqual('function');
   });
+
+  test('should check to see if the call sign is already registered', () => {
+    app.contactsPUT(mockEvent, mockContext, callback);
+
+    expect(mockS3.listObjectsV2).toHaveBeenCalledTimes(1);
+    const expectedParams = {
+      Bucket: 'test-api-bucket'
+    };
+    expect(mockS3.listObjectsV2).toHaveBeenCalledWith(expectedParams, expect.any(Function));
+  });
+
+  test('should return an error if the existing call sign lookup fails', () => {
+    app.contactsPUT(mockEvent, mockContext, callback);
+
+    expect(callback).toHaveBeenCalledTimes(0);
+
+    // Call sign lookup failure
+    mockS3.listObjectsV2.mock.calls[0][1]({error: 'AWS SDK error'});
+  });
+
+  test('should delete the call sign if it exists', () => {
+
+  });
+
+  test('should return an error if the delete fails', () => {
+
+  });
+
+  test('should update the call sign after a delete', () => {
+
+  });
+
+  test('should return an error if the update after a delete fails', () => {
+
+  });
+
+  test('should update the call sign if it doesn\'t exist', () => {
+
+  });
+
+  test('should return an error if the update wihtout a delete fails', () => {
+
+  });
+
+  test('should return an error if there are too many registered call signs', () => {
+
+  });
 });
 
