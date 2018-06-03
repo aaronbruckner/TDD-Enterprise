@@ -2,7 +2,8 @@
 
 const mockS3 = {
   listObjectsV2: jest.fn(),
-  getObject: jest.fn()
+  getObject: jest.fn(),
+  putObject: jest.fn()
 };
 jest.mock('aws-sdk');
 const AWS = require('aws-sdk');
@@ -122,8 +123,154 @@ describe('contacts GET', () => {
 });
 
 describe('contacts PUT', () => {
+  beforeEach(() => {
+    mockEvent.body = JSON.stringify({
+      callSign: 'enterprise-1',
+      x: 50,
+      y: 100
+    });
+  });
+  
   test('should define a function for contacts GET', () => {
     expect(typeof app.contactsPUT).toEqual('function');
+  });
+
+  describe('input validation', () => {
+    test('should return an error if no body is provided', () => {
+      mockEvent.body = 'invalid';
+
+      app.contactsPUT(mockEvent, mockContext, callback);
+
+      expect(mockS3.listObjectsV2).toHaveBeenCalledTimes(0);
+      expect(callback).toHaveBeenCalledTimes(1);
+      const expectedResponse = {
+        statusCode: 400,
+        body: JSON.stringify({
+          error: 'INVALID_INPUT',
+          message: 'Invalid request body. Body should be JSON object with callSign, x, and y properties.'
+        })
+      };
+      expect(callback).toHaveBeenCalledWith(null, expectedResponse);
+    });
+
+    test('should return an error if callSign is missing', () => {
+      mockEvent.body = JSON.stringify({x: 50, y: 100});
+
+      app.contactsPUT(mockEvent, mockContext, callback);
+
+      expect(mockS3.listObjectsV2).toHaveBeenCalledTimes(0);
+      expect(callback).toHaveBeenCalledTimes(1);
+      const expectedResponse = {
+        statusCode: 400,
+        body: JSON.stringify({
+          error: 'INVALID_INPUT',
+          message: 'Invalid body.callSign. Must be [A-Za-z0-9\-]{1,20}.'
+        })
+      };
+      expect(callback).toHaveBeenCalledWith(null, expectedResponse);
+    });
+
+    test('should return an error if x is missing', () => {
+      mockEvent.body = JSON.stringify({callSign: 'enterprise-1', y: 100});
+
+      app.contactsPUT(mockEvent, mockContext, callback);
+
+      expect(mockS3.listObjectsV2).toHaveBeenCalledTimes(0);
+      expect(callback).toHaveBeenCalledTimes(1);
+      const expectedResponse = {
+        statusCode: 400,
+        body: JSON.stringify({
+          error: 'INVALID_INPUT',
+          message: 'Invalid body.x. Must be a number.'
+        })
+      };
+      expect(callback).toHaveBeenCalledWith(null, expectedResponse);
+    });
+
+    test('should return an error if y is missing', () => {
+      mockEvent.body = JSON.stringify({callSign: 'enterprise-1', x: 50});
+
+      app.contactsPUT(mockEvent, mockContext, callback);
+
+      expect(mockS3.listObjectsV2).toHaveBeenCalledTimes(0);
+      expect(callback).toHaveBeenCalledTimes(1);
+      const expectedResponse = {
+        statusCode: 400,
+        body: JSON.stringify({
+          error: 'INVALID_INPUT',
+          message: 'Invalid body.y. Must be a number.'
+        })
+      };
+      expect(callback).toHaveBeenCalledWith(null, expectedResponse);
+    });
+
+    test('should restrict callSign length', () => {
+      mockEvent.body = JSON.stringify({callSign: 'callSignThatIsTooLong', x: 50, y: 100});
+
+      app.contactsPUT(mockEvent, mockContext, callback);
+
+      expect(mockS3.listObjectsV2).toHaveBeenCalledTimes(0);
+      expect(callback).toHaveBeenCalledTimes(1);
+      const expectedResponse = {
+        statusCode: 400,
+        body: JSON.stringify({
+          error: 'INVALID_INPUT',
+          message: 'Invalid body.callSign. Must be [A-Za-z0-9\-]{1,20}.'
+        })
+      };
+      expect(callback).toHaveBeenCalledWith(null, expectedResponse);
+    });
+
+    test('should restrict callSign accepted characters', () => {
+      mockEvent.body = JSON.stringify({callSign: '-invalid/char s', x: 50, y: 100});
+
+      app.contactsPUT(mockEvent, mockContext, callback);
+
+      expect(mockS3.listObjectsV2).toHaveBeenCalledTimes(0);
+      expect(callback).toHaveBeenCalledTimes(1);
+      const expectedResponse = {
+        statusCode: 400,
+        body: JSON.stringify({
+          error: 'INVALID_INPUT',
+          message: 'Invalid body.callSign. Must be [A-Za-z0-9\-]{1,20}.'
+        })
+      };
+      expect(callback).toHaveBeenCalledWith(null, expectedResponse);
+    });
+
+    test('should restrict x to be a number', () => {
+      mockEvent.body = JSON.stringify({callSign: 'enterprise-1', x: '50', y: 100});
+
+      app.contactsPUT(mockEvent, mockContext, callback);
+
+      expect(mockS3.listObjectsV2).toHaveBeenCalledTimes(0);
+      expect(callback).toHaveBeenCalledTimes(1);
+      const expectedResponse = {
+        statusCode: 400,
+        body: JSON.stringify({
+          error: 'INVALID_INPUT',
+          message: 'Invalid body.x. Must be a number.'
+        })
+      };
+      expect(callback).toHaveBeenCalledWith(null, expectedResponse);
+    });
+
+    test('should restrict y to be a number', () => {
+      mockEvent.body = JSON.stringify({callSign: 'enterprise-1', x: 50, y:{}});
+
+      app.contactsPUT(mockEvent, mockContext, callback);
+
+      expect(mockS3.listObjectsV2).toHaveBeenCalledTimes(0);
+      expect(callback).toHaveBeenCalledTimes(1);
+      const expectedResponse = {
+        statusCode: 400,
+        body: JSON.stringify({
+          error: 'INVALID_INPUT',
+          message: 'Invalid body.y. Must be a number.'
+        })
+      };
+      expect(callback).toHaveBeenCalledWith(null, expectedResponse);
+    });
   });
 
   test('should check to see if the call sign is already registered', () => {
@@ -143,6 +290,16 @@ describe('contacts PUT', () => {
 
     // Call sign lookup failure
     mockS3.listObjectsV2.mock.calls[0][1]({error: 'AWS SDK error'});
+
+    expect(mockS3.putObject).toHaveBeenCalledTimes(0);
+    expect(callback).toHaveBeenCalledTimes(1);
+    const expectedResponse = {
+      statusCode: 500,
+      body: JSON.stringify({
+        error: 'DATABASE_ERROR'
+      })
+    };
+    expect(callback).toHaveBeenCalledWith(null, expectedResponse);
   });
 
   test('should delete the call sign if it exists', () => {
@@ -161,8 +318,27 @@ describe('contacts PUT', () => {
 
   });
 
-  test('should update the call sign if it doesn\'t exist', () => {
+  test('should add the call sign if it doesn\'t exist', () => {
+    app.contactsPUT(mockEvent, mockContext, callback);
 
+    // Call sign lookup success
+    mockS3.listObjectsV2.mock.calls[0][1](null, {
+      Contents: [
+        {
+          Key: 'callsign1/50.32/88'
+        },
+        {
+          Key: 'callsign2/1/2'
+        }
+      ]
+    });
+
+    expect(callback).toHaveBeenCalledTimes(0);
+    expect(mockS3.putObject).toHaveBeenCalledTimes(1);
+    const expectedParams = {
+
+    };
+    expect(mockS3.putObject).toHaveBeenCalledWith(expectedParams, expect.any(Function));
   });
 
   test('should return an error if the update wihtout a delete fails', () => {
