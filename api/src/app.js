@@ -41,7 +41,7 @@ function contactsGET (event, context, callback) {
 
     const response = {};
     data.Contents.forEach((content) => {
-      const parts = content.Key.split('/');
+      const parts = content.Key.split(':');
       response[parts[0]] = {
         x: Number(parts[1]),
         y: Number(parts[2])
@@ -100,28 +100,19 @@ function contactsPUT (event, context, callback) {
     }
 
     const params = {
-
+      Bucket: process.env.API_BUCKET,
+      Key: contact.callSign + ':' + contact.x + ':' + contact.y
     };
     s3.putObject(params, (err) => {
-
+      if (err){
+        return backendError(callback);
+      }
+      callback(null, {
+        statusCode: 200,
+        body: JSON.stringify({})
+      });
     });
   });
-  // const params = {
-  //   Bucket: process.env.API_BUCKET,
-  //   Key: 'helloWorld/12/13'
-  // };
-  // s3.putObject(params, (err, data) => {
-  //   callback(null, {
-  //     statusCode: 200,
-  //     body: JSON.stringify(err)
-  //   });
-  // });
-  // callback(null, {
-  //   'statusCode': 200,
-  //   'body': JSON.stringify({
-  //     message: 'Contacts PUT'
-  //   })
-  // });
 };
 
 module.exports = {

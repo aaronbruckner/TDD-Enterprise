@@ -2,7 +2,6 @@
 
 const mockS3 = {
   listObjectsV2: jest.fn(),
-  getObject: jest.fn(),
   putObject: jest.fn()
 };
 jest.mock('aws-sdk');
@@ -16,6 +15,7 @@ let callback;
 
 beforeEach(() => {
   mockS3.listObjectsV2.mockClear();
+  mockS3.putObject.mockClear();
   mockEvent = {};
   mockContext = {};
   callback = jest.fn();
@@ -80,10 +80,10 @@ describe('contacts GET', () => {
     mockS3.listObjectsV2.mock.calls[0][1](null, {
       Contents: [
         {
-          Key: 'callsign1/50.32/88'
+          Key: 'callsign1:50.32:88'
         },
         {
-          Key: 'callsign2/1/2'
+          Key: 'callsign2:1:2'
         }
       ]
     });
@@ -127,7 +127,7 @@ describe('contacts PUT', () => {
     mockEvent.body = JSON.stringify({
       callSign: 'enterprise-1',
       x: 50,
-      y: 100
+      y: 100.01
     });
   });
   
@@ -318,31 +318,88 @@ describe('contacts PUT', () => {
 
   });
 
-  test('should add the call sign if it doesn\'t exist', () => {
-    app.contactsPUT(mockEvent, mockContext, callback);
-
-    // Call sign lookup success
-    mockS3.listObjectsV2.mock.calls[0][1](null, {
-      Contents: [
-        {
-          Key: 'callsign1/50.32/88'
-        },
-        {
-          Key: 'callsign2/1/2'
-        }
-      ]
+  describe('callSign doesn\'t already exist', () => {
+    test('should add the call sign if it doesn\'t exist', () => {
+      app.contactsPUT(mockEvent, mockContext, callback);
+  
+      // Call sign lookup success
+      mockS3.listObjectsV2.mock.calls[0][1](null, {
+        Contents: [
+          {
+            Key: 'callsign1:50.32:88'
+          },
+          {
+            Key: 'callsign2:1:2'
+          }
+        ]
+      });
+  
+      expect(callback).toHaveBeenCalledTimes(0);
+      expect(mockS3.putObject).toHaveBeenCalledTimes(1);
+      const expectedParams = {
+        Bucket: 'test-api-bucket',
+        Key: 'enterprise-1:50:100.01'
+      };
+      expect(mockS3.putObject).toHaveBeenCalledWith(expectedParams, expect.any(Function));
     });
+  
+    test('should return an error if the update without a delete fails', () => {
+      app.contactsPUT(mockEvent, mockContext, callback);
+  
+      // Call sign lookup success
+      mockS3.listObjectsV2.mock.calls[0][1](null, {
+        Contents: [
+          {
+            Key: 'callsign1:50.32:88'
+          },
+          {
+            Key: 'callsign2:1:2'
+          }
+        ]
+      });
+      
+      expect(callback).toHaveBeenCalledTimes(0);
 
-    expect(callback).toHaveBeenCalledTimes(0);
-    expect(mockS3.putObject).toHaveBeenCalledTimes(1);
-    const expectedParams = {
+      //Error during object put
+      mockS3.putObject.mock.calls[0][1]({error: 'AWS SDK error while putting object in S3'});
 
-    };
-    expect(mockS3.putObject).toHaveBeenCalledWith(expectedParams, expect.any(Function));
-  });
+      expect(callback).toHaveBeenCalledTimes(1);
+      const expectedResponse = {
+        statusCode: 500,
+        body: JSON.stringify({
+          error: 'DATABASE_ERROR'
+        })
+      };
+      expect(callback).toHaveBeenCalledWith(null, expectedResponse);
+    });
+  
+    test('should return success if the update without a delete succeeds', () => {
+      app.contactsPUT(mockEvent, mockContext, callback);
+  
+      // Call sign lookup success
+      mockS3.listObjectsV2.mock.calls[0][1](null, {
+        Contents: [
+          {
+            Key: 'callsign1:50.32:88'
+          },
+          {
+            Key: 'callsign2:1:2'
+          }
+        ]
+      });
+      
+      expect(callback).toHaveBeenCalledTimes(0);
 
-  test('should return an error if the update wihtout a delete fails', () => {
+      //Successful object save
+      mockS3.putObject.mock.calls[0][1](null, {});
 
+      expect(callback).toHaveBeenCalledTimes(1);
+      const expectedResponse = {
+        statusCode: 200,
+        body: JSON.stringify({})
+      };
+      expect(callback).toHaveBeenCalledWith(null, expectedResponse);
+    });
   });
 
   test('should return an error if there are too many registered call signs', () => {
