@@ -21,6 +21,7 @@ Resources:
       CodeUri: ./src
       Handler: app.contactsGET
       Runtime: nodejs8.10
+      Role: !GetAtt contactsRole.Arn
       Events:
         restRequest:
           Type: Api
@@ -38,6 +39,7 @@ Resources:
       CodeUri: ./src
       Handler: app.contactsPUT
       Runtime: nodejs8.10
+      Role: !GetAtt contactsRole.Arn
       Events:
         # Registers a ship with its call sign and position
         restRequest:
@@ -48,6 +50,29 @@ Resources:
       Environment:
         Variables:
           API_BUCKET: !Ref apiBucket
+
+  contactsRole: 
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument: 
+        Version: 2012-10-17
+        Statement: 
+          - Effect: Allow
+            Principal: 
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Path: "/"
+      Policies: 
+        - PolicyName: !Sub ${AWS::StackName}-contacts
+          PolicyDocument: 
+            Version: 2012-10-17
+            Statement: 
+              - Effect: "Allow"
+                Action: "*"
+                Resource: !Sub "arn:aws:s3:::${apiBucket}"
+              - Effect: "Allow"
+                Action: "*"
+                Resource: !Sub "arn:aws:s3:::${apiBucket}/*"
 
 Outputs:
     ApiUrl:
